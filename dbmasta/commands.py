@@ -40,6 +40,28 @@ def package_exists(
         )
     return package_exists
 
+def list_migrations(
+    packagename: str
+) -> list:
+    """
+    list_mgrations reads a package and returns a list of all the migrations
+    """
+    return [f for f in pack_folder.joinpath(packagename).iterdir() if f.suffix == ".sql"]
+
+def find_latest_migration(
+    migration_list: List[pl.Path]
+) -> str:
+    """
+    Parses migration files and finds version number to return the latest as a string.
+    
+    Assumes migration filename convention of:
+    ####-<migration_name>.sql
+    """
+    if migration_list == []:
+        return "0001"
+    else:
+        return str(migration_list[-1].name)[0:4]
+
 #################################
 ## CLI Commands
 #################################
@@ -83,10 +105,18 @@ def createmigration(
     migrationname: str,
     packagename: str
 ):
+    """
+    createmigration initializes a .sql module for a migration
+    """
     typer.echo(f"Creating {migrationname} in {packagename} package...")
     # check if package exists
     package_exists(packagename=packagename)
-    # TODO read package numbers and increment +1 to incoming migration
+    # TODO read migration numbers and increment +1 to incoming migration
+    typer.echo("Found following migrations:")
+    current_migrations = list_migrations(packagename=packagename)
+    typer.echo(current_migrations)
+    latest_migr = find_latest_migration(migration_list=current_migrations)
+    typer.echo(f"Latest migration is: {latest_migr}")
     # TODO initialize SQL file
 
 
