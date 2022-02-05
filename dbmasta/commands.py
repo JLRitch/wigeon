@@ -23,7 +23,8 @@ def createpackage(
         pack_path.joinpath(packagename).mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         raise FileExistsError(f"A package with the name {packagename} already exists at {pack_path.joinpath(packagename)}.")
-    with open(pack_path.joinpath("__init__.py"), "w") as f:
+
+    with open(pack_path.joinpath(packagename, "__init__.py"), "w") as f:
         f.write("# auto generated package initializer")
 
 
