@@ -84,6 +84,8 @@ class Package(object):
         if migration_list == []:
             latest_migration_int = 0
         else:
+            # sort migration list to ensure largest number is the latest
+            migration_list = sorted(migration_list)
             latest_migration_int = int(
                 str(
                     migration_list[-1].name

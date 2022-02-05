@@ -70,7 +70,6 @@ def createmigration(
     # find latest migration number
     current_migrations = package.list_migrations(packagename=packagename)
     current_migr_num = package.find_current_migration(migration_list=current_migrations)
-    typer.echo(current_migrations)
     typer.echo(f"Current migration is: {current_migr_num}")
     # create migration
     package.add_migration(
