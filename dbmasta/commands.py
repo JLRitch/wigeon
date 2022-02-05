@@ -14,9 +14,7 @@ from dbmasta.packages import Package
 ## Module level variables
 #################################
 app = typer.Typer()
-# pack_folder = pl.Path().cwd().joinpath("packages")
 
-# manifest_template = {}
 
 #################################
 ## Module level functions
@@ -31,7 +29,7 @@ app = typer.Typer()
 def createpackage(
     packagename: str,
     dbtype: str,
-    environments: str="dev,qa,uat,prod"
+    environments: str="local,dev,qa,prod"
 ):
     """
     createpackage initializes a package of migrations in the current
@@ -58,7 +56,8 @@ def createpackage(
 @app.command()
 def createmigration(
     migrationname: str,
-    packagename: str
+    packagename: str,
+    tags: str=""
 ):
     """
     createmigration initializes a .sql module for a migration
@@ -71,10 +70,18 @@ def createmigration(
     current_migrations = package.list_migrations(packagename=packagename)
     current_migr_num = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration is: {current_migr_num}")
+    # prep tag list
+    # include build by default
+    if tags != "":
+        tag_list = ["build"]
+        tag_list += tags.split(",")
+    else:
+        tag_list = ["build"]
     # create migration
     package.add_migration(
         current_migration=current_migr_num,
-        migration_name=migrationname
+        migration_name=migrationname,
+        tags=tag_list
     )
     typer.echo(f"Successfully created {current_migr_num}-{migrationname}.sql!!")
 

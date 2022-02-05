@@ -52,12 +52,11 @@ class Package(object):
         
         # initialize package manifest
         manifest_template = {}
-        manifest_template["environments"] = env_list
+        manifest_template["environments"] = {}
         for e in env_list:
-            manifest_template[e] = {
-                "connection": {},
-                "migrations": []
-            }
+            manifest_template["environments"][e] = {"connection": "TODO"}
+        manifest_template["migrations"] = []
+
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:
             json.dump(manifest_template, f, indent=4)
     
@@ -94,7 +93,6 @@ class Package(object):
         
         # increment migration guid
         current_migration = latest_migration_int + 1
-        print(f"cur: {current_migration}, latest: {latest_migration_int}")
         # check if migration greater than limit of 4 characters
         if current_migration > 9999:
             raise ValueError(
@@ -114,13 +112,18 @@ class Package(object):
     def add_migration(
         self,
         current_migration: str,
-        migration_name: str
+        migration_name: str,
+        tags: List[str]
     ):
         with open(self.pack_path.joinpath(f"{current_migration}-{migration_name}.sql"), "w") as f:
             f.write("-- TODO build migration code")
         self.read_manifest()
-        for env in self.manifest["environments"]:
-            self.manifest[env]["migrations"].append(current_migration)
+        self.manifest["migrations"].append(
+            {
+                "name": f"{current_migration}-{migration_name}.sql",
+                "tags": [t for t in tags]
+            }
+        )
         self.write_manifest()
 
 class manifest(object):
