@@ -6,5 +6,5 @@
 ## To use:
 Access help
 ```shell
-python3 dbmasta -h
+python3 dbmasta -help
 ```
