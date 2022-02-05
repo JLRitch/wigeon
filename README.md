@@ -1,11 +1,12 @@
-# Features to build!
+# dbmasta (to be renamed, pipeybase?) 
+This is a framework for building and deploying sql database migrations across your CI/CD-based applications!
+# Features to build
 - define and run sql script packages
 - json manifests managed via environment variables
 - auto generate guid for modules
 - migration changelog written to target database
 - connection manager
 - connection via environment variables
-
 
 ## To use:
 Access help
