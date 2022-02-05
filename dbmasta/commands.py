@@ -11,14 +11,18 @@ import typer
 
 app = typer.Typer()
 
-pack_path = pl.Path().cwd().joinpath("dbmasta", "packages")
+pack_path = pl.Path().cwd().joinpath("packages")
 
 @app.command()
 def createpackage(
     packagename: str
 ):
     typer.echo(f"Creating {packagename} package")
-    pack_path.joinpath(packagename).mkdir(parents=True, exist_ok=True)
+     # check if package exists
+    try:
+        pack_path.joinpath(packagename).mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        raise FileExistsError(f"A package with the name {packagename} already exists at {pack_path.joinpath(packagename)}.")
     with open(pack_path.joinpath("__init__.py"), "w") as f:
         f.write("# auto generated package initializer")
 
