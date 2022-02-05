@@ -1,6 +1,6 @@
 # Features to build!
 - define and run sql script packages
-- conditionally run packages based on environment variables
+- manifest managed via environment variables
 - auto generate guid for modules
 - migration changelog written to target database
 - connection manager
