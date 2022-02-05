@@ -3,7 +3,7 @@
 # external imports
 
 # project imports
-import commands
+from dbmasta import commands
 
 
 commands.app()
