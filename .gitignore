@@ -1,0 +1,8 @@
+# environment
+env/
+test_env/
+*.pyc
+
+# build
+build/
+dist/
