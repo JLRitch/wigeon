@@ -2,6 +2,7 @@
 env/
 test_env/
 *.pyc
+__pycache__
 
 # build
 build/
