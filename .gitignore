@@ -3,6 +3,8 @@ env/
 test_env/
 *.pyc
 __pycache__
+*.sqlite
+*.db
 
 # build
 build/

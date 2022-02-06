@@ -9,6 +9,7 @@ import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
+from wigeon.dboperations import Connection
 
 #################################
 ## Module level variables
@@ -95,6 +96,25 @@ def listmigrations(
         typer.echo(f"    {m.name}")
     current_migr = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration would be: {current_migr}")
+
+@app.command()
+def connect(
+    packagename: str,
+    conn_string: str=None
+):
+    """
+    connects to a database
+    """
+    # check if package exists
+    package = Package(packagename=packagename)
+    package.exists(packagename=packagename)
+    # create connection, return cursor
+    # TODO remove hardboded sqlite
+    conn = Connection( db_engine="sqlite")
+    cur = conn.connect(
+        db_path=str(pl.Path().cwd().joinpath("exampledb.sqlite"))
+    )
+    typer.echo("Connected to a database!!!!")
 
 
 if __name__ == "__main__":
