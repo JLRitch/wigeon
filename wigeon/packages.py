@@ -39,7 +39,8 @@ class Package(object):
     
     def create(
         self,
-        env_list: list
+        env_list: list,
+        db_engine: str
     ):
         """
         Package.create initializes a package in the root/packages/ directory and
@@ -52,6 +53,7 @@ class Package(object):
         
         # initialize package manifest
         manifest_template = {}
+        manifest_template["db_engine"] = db_engine
         manifest_template["environments"] = {}
         for e in env_list:
             manifest_template["environments"][e] = {"connection": "TODO"}

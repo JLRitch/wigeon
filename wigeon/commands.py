@@ -49,7 +49,8 @@ def createpackage(
 
     # initialize package folder
     package.create(
-        env_list=environments.split(",")
+        env_list=environments.split(","),
+        db_engine=dbtype
     )
 
 
