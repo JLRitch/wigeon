@@ -3,19 +3,20 @@ from argparse import ArgumentParser
 import pathlib as pl
 from typing import List
 import json
+import getpass
 
 # external imports
 import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
-from wigeon.dboperations import Connection
+from wigeon.dboperations import Connector
 
 #################################
 ## Module level variables
 #################################
 app = typer.Typer()
-
+user = getpass.getuser()
 
 #################################
 ## Module level functions
@@ -89,9 +90,9 @@ def listmigrations(
     """
     # check if package exists
     package = Package(packagename=packagename)
-    package.exists(packagename=packagename)
+    package.exists()
     typer.echo(f"Found following migrations for {packagename}:")
-    current_migrations = package.list_migrations(packagename=packagename)
+    current_migrations = package.list_migrations()
     for m in sorted(current_migrations):
         typer.echo(f"    {m.name}")
     current_migr = package.find_current_migration(migration_list=current_migrations)
@@ -100,22 +101,82 @@ def listmigrations(
 @app.command()
 def connect(
     packagename: str,
-    conn_string: str=None
+    server: str=None,
+    database: str=None,
+    username: str=None,
+    password: str=None,
+    driver: str=None,
+    connstring: str=None
 ):
     """
     connects to a database
     """
     # check if package exists
     package = Package(packagename=packagename)
-    package.exists(packagename=packagename)
+    package.exists()
+    package.read_manifest()
     # create connection, return cursor
-    # TODO remove hardboded sqlite
-    conn = Connection( db_engine="sqlite")
-    cur = conn.connect(
-        db_path=str(pl.Path().cwd().joinpath("exampledb.sqlite"))
+    cnxn = Connector(db_engine=package.manifest["db_engine"])
+    cur = cnxn.connect(
+        server=server,
+        database=database,
+        username=username,
+        password=password,
+        driver=driver,
+        connstring=connstring
     )
-    typer.echo("Connected to a database!!!!")
+    typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
 
+@app.command()
+def runmigrations(
+    packagename: str,
+    server: str=None, # connection variable
+    database: str=None, # connection variable
+    username: str=None, # connection variable
+    password: str=None, # connection variable
+    driver: str=None, # connection variable
+    connstring: str=None, # connection variable
+    all: bool=True, # migration manifest variable
+    buildtag: str=None
+):
+    """
+    connects to a database and runs migrations
+    """
+    # check if package exists and read manifest
+    package = Package(packagename=packagename)
+    package.exists()
+    package.read_manifest()
+    # create connection
+    connector = Connector(db_engine=package.manifest["db_engine"])
+    cnxn = connector.connect(
+        server=server,
+        database=database,
+        username=username,
+        password=password,
+        driver=driver,
+        connstring=connstring
+    )
+    cur = cnxn.cursor()
+    typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
+
+    # TODO initialize changelog table if not exists
+    # TODO add columns change_number, completed_date, applied_by(username), and description(.sql filename)
+    query_create_changelog = """
+    CREATE TABLE IF NOT EXISTS changelog (change_number, completed_date, applied_by, description);
+    """
+    cur.execute(query_create_changelog)
+    cnxn.commit()
+    # TODO find migrations already in target database
+    query_migrations_from_changelog = """
+    SELECT description from changelog
+    """
+    # TODO find migrations in manifest
+    mani_migrations = package.fetch_manifest_migrations(buildtag=buildtag)
+    print(mani_migrations)
+    # TODO run all migrations
+    current_migrations = package.list_migrations()
+    # TODO run migrations only with certain build tag
+    # TODO run migrations in manifest, but not in db changelog table
 
 if __name__ == "__main__":
     app()
