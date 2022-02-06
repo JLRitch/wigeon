@@ -1,5 +1,6 @@
 # standard imports
 import pathlib as pl
+import shutil
 import json
 from typing import List
 
@@ -61,6 +62,12 @@ class Package(object):
 
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:
             json.dump(manifest_template, f, indent=4)
+    
+    def delete(self):
+        """
+        Package.delete removes the package directory from os
+        """
+        shutil.rmtree(self.pack_path)
     
     def list_migrations(
         self,
