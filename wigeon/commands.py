@@ -8,7 +8,7 @@ import json
 import typer # using for quick build of cli prototype
 
 # project imports
-from dbmasta.packages import Package
+from wigeon.packages import Package
 
 #################################
 ## Module level variables

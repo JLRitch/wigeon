@@ -1,4 +1,4 @@
-# dbmasta (to be renamed, pipeybase?) 
+# wigeon (to be renamed, pipeybase, dbdonedid?) 
 This is a framework for building and deploying sql database migrations across your CI/CD-based applications!
 
 ## Features included
@@ -18,22 +18,22 @@ This is a framework for building and deploying sql database migrations across yo
 ## To use:
 Access help
 ```shell
-python3 dbmasta --help
+python3 wigeon --help
 ```
 
 Create package
 ```shell
-python3 -m dbmasta createpackage devdb sqlite --environments=local,dev,qa,prod
+python3 -m wigeon createpackage devdb sqlite --environments=local,dev,qa,prod
 ```
 
 Add migrations to a package
 ```shell
-python3 -m dbmasta createmigration initialize_db devdb
-python3 -m dbmasta createmigration add_people_table devdb
-python3 -m dbmasta createmigration add_cars_table devdb --tags=mercedes,bugati
+python3 -m wigeon createmigration initialize_db devdb
+python3 -m wigeon createmigration add_people_table devdb
+python3 -m wigeon createmigration add_cars_table devdb --tags=mercedes,bugati
 ```
 
 List all migrations
 ```shell
-python3 -m dbmasta listmigrations devdb
+python3 -m wigeon listmigrations devdb
 ```

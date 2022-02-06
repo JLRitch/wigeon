@@ -3,7 +3,7 @@
 # external imports
 
 # project imports
-from dbmasta import commands
+from wigeon import commands
 
-
-commands.app()
+app = commands.app()
+app()
