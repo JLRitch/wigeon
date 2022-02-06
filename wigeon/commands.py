@@ -57,7 +57,7 @@ def createpackage(
 def createmigration(
     migrationname: str,
     packagename: str,
-    tags: str=""
+    build: str
 ):
     """
     createmigration initializes a .sql module for a migration
@@ -70,18 +70,11 @@ def createmigration(
     current_migrations = package.list_migrations(packagename=packagename)
     current_migr_num = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration is: {current_migr_num}")
-    # prep tag list
-    # include build by default
-    if tags != "":
-        tag_list = ["build"]
-        tag_list += tags.split(",")
-    else:
-        tag_list = ["build"]
     # create migration
     package.add_migration(
         current_migration=current_migr_num,
         migration_name=migrationname,
-        tags=tag_list
+        builds=[build] # TODO enable multiple build support at later date
     )
     typer.echo(f"Successfully created {current_migr_num}-{migrationname}.sql!!")
 
@@ -97,7 +90,7 @@ def listmigrations(
     package.exists(packagename=packagename)
     typer.echo(f"Found following migrations for {packagename}:")
     current_migrations = package.list_migrations(packagename=packagename)
-    for m in current_migrations:
+    for m in sorted(current_migrations):
         typer.echo(f"    {m.name}")
     current_migr = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration would be: {current_migr}")

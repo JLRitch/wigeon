@@ -46,7 +46,7 @@ class Package(object):
         supplies an __init__.py and manifest.json
         """
         # initialize package folder
-        self.pack_path.mkdir()
+        self.pack_path.mkdir(parents=True)
         with open(self.pack_path.joinpath("__init__.py"), "w") as f:
             f.write("# auto generated package initializer")
         
@@ -113,7 +113,7 @@ class Package(object):
         self,
         current_migration: str,
         migration_name: str,
-        tags: List[str]
+        builds: List[str]
     ):
         with open(self.pack_path.joinpath(f"{current_migration}-{migration_name}.sql"), "w") as f:
             f.write("-- TODO build migration code")
@@ -121,7 +121,7 @@ class Package(object):
         self.manifest["migrations"].append(
             {
                 "name": f"{current_migration}-{migration_name}.sql",
-                "tags": [t for t in tags]
+                "builds": [b for b in builds]
             }
         )
         self.write_manifest()
