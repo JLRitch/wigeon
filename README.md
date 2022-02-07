@@ -44,7 +44,7 @@ python3 -m wigeon listmigrations fly
 
 Run migrations for the `fly` package (a local sqlite connection):
 ```bash
-python3 -m wigeon runmigrations color --connstring=/path/to/exampledb.sqlite
+python3 -m wigeon runmigrations fly --connstring=/path/to/exampledb.sqlite
 ```
 
 ## To use (FROM PIP INSTALL):
@@ -72,7 +72,7 @@ wigeon listmigrations fly
 
 Run migrations for the `fly` package (a local sqlite connection):
 ```bash
-wigeon runmigrations color --connstring=/path/to/exampledb.sqlite
+wigeon runmigrations fly --connstring=/path/to/exampledb.sqlite
 ```
 
 ## Requirements
