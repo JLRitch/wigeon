@@ -6,6 +6,8 @@ This is a framework for building and deploying sql database migrations across yo
 - Auto-serialized Migration creation
 - Migration manifest management
 - Migration build tagging
+- connection arguments passed at runtime to support deployment across multiple
+  enviroments
 ## Features to build
 - json manifests managed via environment variables
 - migration changelog written to target database
@@ -17,48 +19,58 @@ This is a framework for building and deploying sql database migrations across yo
 
 ## To use (FROM GIT REPO):
 Access help:
-```shell
+```bash
 python3 wigeon --help
 ```
 
 Create `fly` package for `sqlite` with local, dev, qa, and prod environments:
-```shell
+```bash
 python3 -m wigeon createpackage fly sqlite --environments=local,dev,qa,prod
 ```
 
 Add migrations to the `fly` package with build tag of `0.0.1`:
-```shell
+```bash
 python3 -m wigeon createmigration initialize_db fly 0.0.1
 python3 -m wigeon createmigration add_people_table fly 0.0.1
 python3 -m wigeon createmigration add_cars_table fly 0.0.1
 ```
 
 List all migrations for the `fly` package:
-```shell
+```bash
 python3 -m wigeon listmigrations fly
+```
+
+Run migrations for the `fly` package (a local sqlite connection):
+```bash
+python3 -m wigeon runmigrations color --connstring=/path/to/exampledb.sqlite
 ```
 
 ## To use (FROM PIP INSTALL):
 Access help:
-```shell
+```bash
 wigeon --help
 ```
 
 Create `fly` package for `sqlite` with local, dev, qa, and prod environments:
-```shell
+```bash
 wigeon createpackage fly sqlite --environments=local,dev,qa,prod
 ```
 
 Add migrations to the `fly` package with build tag of `0.0.1` :
-```shell
+```bash
 wigeon createmigration initialize_db fly 0.0.1
 wigeon createmigration add_people_table fly 0.0.1
 wigeon createmigration add_cars_table fly 0.0.1
 ```
 
 List all migrations for the `fly` package:
-```shell
+```bash
 wigeon listmigrations fly
+```
+
+Run migrations for the `fly` package (a local sqlite connection):
+```bash
+wigeon runmigrations color --connstring=/path/to/exampledb.sqlite
 ```
 
 ## Requirements
