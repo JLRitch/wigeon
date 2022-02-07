@@ -1,4 +1,4 @@
-# wigeon (to be renamed, pipeybase, dbdonedid?) 
+# wigeon
 This is a framework for building and deploying sql database migrations across your CI/CD-based applications!
 
 **STILL VERY MUCH A WORK IN PROGRESS!!**
