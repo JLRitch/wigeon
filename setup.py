@@ -45,7 +45,7 @@ minimal_requirements = [
 setup(
     name="wigeon",
     version=get_version("wigeon"),
-    url="https://",
+    url="https://github.com/JLRitch/wigeon",
     license="BSD",
     description="DB Migrations for the continuous developer.",
     long_description=get_long_description(),
