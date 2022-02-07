@@ -3,18 +3,20 @@ from argparse import ArgumentParser
 import pathlib as pl
 from typing import List
 import json
+import getpass
 
 # external imports
 import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
+from wigeon.dboperations import Connector
 
 #################################
 ## Module level variables
 #################################
 app = typer.Typer()
-
+user = getpass.getuser()
 
 #################################
 ## Module level functions
@@ -49,7 +51,8 @@ def createpackage(
 
     # initialize package folder
     package.create(
-        env_list=environments.split(",")
+        env_list=environments.split(","),
+        db_engine=dbtype
     )
 
 
@@ -57,7 +60,7 @@ def createpackage(
 def createmigration(
     migrationname: str,
     packagename: str,
-    tags: str=""
+    build: str
 ):
     """
     createmigration initializes a .sql module for a migration
@@ -70,18 +73,11 @@ def createmigration(
     current_migrations = package.list_migrations(packagename=packagename)
     current_migr_num = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration is: {current_migr_num}")
-    # prep tag list
-    # include build by default
-    if tags != "":
-        tag_list = ["build"]
-        tag_list += tags.split(",")
-    else:
-        tag_list = ["build"]
     # create migration
     package.add_migration(
         current_migration=current_migr_num,
         migration_name=migrationname,
-        tags=tag_list
+        builds=[build] # TODO enable multiple build support at later date
     )
     typer.echo(f"Successfully created {current_migr_num}-{migrationname}.sql!!")
 
@@ -94,14 +90,93 @@ def listmigrations(
     """
     # check if package exists
     package = Package(packagename=packagename)
-    package.exists(packagename=packagename)
+    package.exists()
     typer.echo(f"Found following migrations for {packagename}:")
-    current_migrations = package.list_migrations(packagename=packagename)
-    for m in current_migrations:
+    current_migrations = package.list_migrations()
+    for m in sorted(current_migrations):
         typer.echo(f"    {m.name}")
     current_migr = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration would be: {current_migr}")
 
+@app.command()
+def connect(
+    packagename: str,
+    server: str=None,
+    database: str=None,
+    username: str=None,
+    password: str=None,
+    driver: str=None,
+    connstring: str=None
+):
+    """
+    connects to a database
+    """
+    # check if package exists
+    package = Package(packagename=packagename)
+    package.exists()
+    package.read_manifest()
+    # create connection, return cursor
+    cnxn = Connector(db_engine=package.manifest["db_engine"])
+    cur = cnxn.connect(
+        server=server,
+        database=database,
+        username=username,
+        password=password,
+        driver=driver,
+        connstring=connstring
+    )
+    typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
+
+@app.command()
+def runmigrations(
+    packagename: str,
+    server: str=None, # connection variable
+    database: str=None, # connection variable
+    username: str=None, # connection variable
+    password: str=None, # connection variable
+    driver: str=None, # connection variable
+    connstring: str=None, # connection variable
+    all: bool=True, # migration manifest variable
+    buildtag: str=None
+):
+    """
+    connects to a database and runs migrations
+    """
+    # check if package exists and read manifest
+    package = Package(packagename=packagename)
+    package.exists()
+    package.read_manifest()
+    # create connection
+    connector = Connector(db_engine=package.manifest["db_engine"])
+    cnxn = connector.connect(
+        server=server,
+        database=database,
+        username=username,
+        password=password,
+        driver=driver,
+        connstring=connstring
+    )
+    cur = cnxn.cursor()
+    typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
+
+    # TODO initialize changelog table if not exists
+    # TODO add columns change_number, completed_date, applied_by(username), and description(.sql filename)
+    query_create_changelog = """
+    CREATE TABLE IF NOT EXISTS changelog (change_number, completed_date, applied_by, description);
+    """
+    cur.execute(query_create_changelog)
+    cnxn.commit()
+    # TODO find migrations already in target database
+    query_migrations_from_changelog = """
+    SELECT description from changelog
+    """
+    # TODO find migrations in manifest
+    mani_migrations = package.fetch_manifest_migrations(buildtag=buildtag)
+    print(mani_migrations)
+    # TODO run all migrations
+    current_migrations = package.list_migrations()
+    # TODO run migrations only with certain build tag
+    # TODO run migrations in manifest, but not in db changelog table
 
 if __name__ == "__main__":
     app()

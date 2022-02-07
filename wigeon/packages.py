@@ -1,5 +1,6 @@
 # standard imports
 import pathlib as pl
+import shutil
 import json
 from typing import List
 
@@ -15,43 +16,46 @@ class Package(object):
         self,
         packagename:str
     ):
+        self.packagename = packagename
         self.pack_path = Package.pack_folder.joinpath(packagename)
+        self.manifest = None
 
     def exists(
         self,
-        packagename: str,
         raise_error_on_exists: bool=False,
         raise_error_on_not_exist: bool=True
     ) -> bool:
         """
         Checks if a given package exists. Defaults to error if package is not present.
         """
-        package_exists = Package.pack_folder.joinpath(packagename).exists()
+        package_exists = Package.pack_folder.joinpath(self.packagename).exists()
         if package_exists and raise_error_on_exists:
             raise FileExistsError(
-                f"A package with the name {packagename} already exists at {Package.pack_folder.joinpath(packagename)}."
+                f"A package with the name {self.packagename} already exists at {Package.pack_folder.joinpath(self.packagename)}."
             )
         elif (not package_exists) and (raise_error_on_not_exist):
             raise FileExistsError(
-                f"A package with the name {packagename} does not exist at {Package.pack_folder.joinpath(packagename)}."
+                f"A package with the name {self.packagename} does not exist at {Package.pack_folder.joinpath(self.packagename)}."
             )
         return package_exists
     
     def create(
         self,
-        env_list: list
+        env_list: list,
+        db_engine: str
     ):
         """
         Package.create initializes a package in the root/packages/ directory and
         supplies an __init__.py and manifest.json
         """
         # initialize package folder
-        self.pack_path.mkdir()
+        self.pack_path.mkdir(parents=True)
         with open(self.pack_path.joinpath("__init__.py"), "w") as f:
             f.write("# auto generated package initializer")
         
         # initialize package manifest
         manifest_template = {}
+        manifest_template["db_engine"] = db_engine
         manifest_template["environments"] = {}
         for e in env_list:
             manifest_template["environments"][e] = {"connection": "TODO"}
@@ -60,14 +64,19 @@ class Package(object):
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:
             json.dump(manifest_template, f, indent=4)
     
+    def delete(self):
+        """
+        Package.delete removes the package directory from os
+        """
+        shutil.rmtree(self.pack_path)
+    
     def list_migrations(
-        self,
-        packagename: str
+        self
     ) -> list:
         """
         list_mgrations reads a package and returns a list of all the migrations
         """
-        return [f for f in Package.pack_folder.joinpath(packagename).iterdir() if f.suffix == ".sql"]
+        return [f for f in Package.pack_folder.joinpath(self.packagename).iterdir() if f.suffix == ".sql"]
 
     def find_current_migration(
         self,
@@ -106,14 +115,35 @@ class Package(object):
             self.manifest = json.load(f)
 
     def write_manifest(self):
+        if not self.manifest:
+            raise ValueError(
+                f"{self.__class__} {self.packagename}'s manifest not yet read or built. Wigeon will not write nonetype manifest."
+            )
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:
             json.dump(self.manifest, f, indent=4)
+    
+    def fetch_manifest_migrations(self, buildtag: str=None):
+        """
+        fetch_manifest_migrations collects migrations present in the manifest and
+        allows for filtering based on buildtag
+        """
+        if not self.manifest:
+            raise ValueError(
+                f"{self.__class__} {self.packagename}'s manifest not yet read or built. Wigeon will not write nonetype manifest."
+            )
+        if buildtag:
+            # TODO implement filtering by build tag
+            raise NotImplementedError("Build tag filtering not yet implemented!")
+            migrations = {k:v for k,v in self.manifest["migrations"] if buildtag in v["builds"]}
+        else:
+            migrations = self.manifest["migrations"].copy()
+        return migrations
     
     def add_migration(
         self,
         current_migration: str,
         migration_name: str,
-        tags: List[str]
+        builds: List[str]
     ):
         with open(self.pack_path.joinpath(f"{current_migration}-{migration_name}.sql"), "w") as f:
             f.write("-- TODO build migration code")
@@ -121,7 +151,7 @@ class Package(object):
         self.manifest["migrations"].append(
             {
                 "name": f"{current_migration}-{migration_name}.sql",
-                "tags": [t for t in tags]
+                "builds": [b for b in builds]
             }
         )
         self.write_manifest()
