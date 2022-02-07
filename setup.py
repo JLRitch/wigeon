@@ -37,7 +37,8 @@ env_marker_below_38 = "python_version < '3.8'"
 
 minimal_requirements = [
     "click>=8.0.3",
-    "typer>=0.4.0"
+    "typer>=0.4.0",
+    "pyodbc>=4.0.32"
 ]
 
 
@@ -58,7 +59,6 @@ setup(
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
-        "Topic :: Database :: SQL",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
