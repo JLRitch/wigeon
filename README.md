@@ -1,4 +1,6 @@
 # wigeon
+DB Migrations for the coninuous developer.
+
 This is a framework for building and deploying sql database migrations across your CI/CD-based applications!
 
 **STILL VERY MUCH A WORK IN PROGRESS!!**
