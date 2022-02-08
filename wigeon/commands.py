@@ -160,8 +160,8 @@ def runmigrations(
     cur = cnxn.cursor()
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
 
-    # TODO initialize changelog table if not exists
-    # TODO add columns change_number, completed_date, applied_by(username), and description(.sql filename)
+    # initialize changelog table if not exists and add columns
+    # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
     query_create_changelog = """
     CREATE TABLE IF NOT EXISTS changelog (change_id INTEGER NOT NULL PRIMARY KEY, migration_date TEXT, migration_name TEXT, applied_by TEXT);
     """
@@ -169,24 +169,33 @@ def runmigrations(
     cnxn.commit()
     # TODO find migrations already in target database
     query_migrations_from_changelog = """
-    SELECT description from changelog
+    SELECT migration_name from changelog
     """
-    # TODO find migrations in manifest
+
+    cur.execute(query_migrations_from_changelog)
+    db_migrations = [n[0] for n in cur.fetchall()]
+
+    # find migrations in manifest
+    # filter to migrations only with certain build tag
     mani_migrations = [Migration(**m) for m in package.fetch_manifest_migrations(buildtag=buildtag)]
-    print(mani_migrations)
-    # TODO run all migrations
+
+    # run migrations if not already in db
+    duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
+    print(f"Migrations already in db: {duplicate_migrations}")
+    mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
+    print(f"Migrations to run: {mani_migrations}")
     for mig in mani_migrations:
+        if mig.name in db_migrations:
+            duplicate_migrations.append(mig.name)
+            continue
         mig.run(
             package=package,
             cursor=cur,
             user=user
         )
+    print(f"Successfully ran {len(mani_migrations)} migrations")
     cnxn.commit()
     cnxn.close()
-
-    current_migrations = package.list_migrations()
-    # TODO run migrations only with certain build tag
-    # TODO run migrations in manifest, but not in db changelog table
 
 if __name__ == "__main__":
     app()
