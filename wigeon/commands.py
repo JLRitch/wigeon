@@ -11,7 +11,7 @@ import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
-from wigeon.db import Connector
+from wigeon.db import Connector, Migration
 
 #################################
 ## Module level variables
@@ -172,20 +172,14 @@ def runmigrations(
     SELECT description from changelog
     """
     # TODO find migrations in manifest
-    mani_migrations = package.fetch_manifest_migrations(buildtag=buildtag)
+    mani_migrations = [Migration(**m) for m in package.fetch_manifest_migrations(buildtag=buildtag)]
     print(mani_migrations)
     # TODO run all migrations
     for mig in mani_migrations:
-        with open(package.pack_path.joinpath(mig["name"]), "r") as f:
-            query = f.read()
-        cur.execute(query)
-        cur.execute(
-            "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
-            {
-                "migration_date": datetime.datetime.now().strftime("%Y%m%d-%H%M"),
-                "migration_name": mig["name"],
-                "applied_by": user
-            }
+        mig.run(
+            package=package,
+            cursor=cur,
+            user=user
         )
     cnxn.commit()
     cnxn.close()
