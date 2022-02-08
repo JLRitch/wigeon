@@ -138,7 +138,7 @@ def runmigrations(
     driver: str=None, # connection variable
     connstring: str=None, # connection variable
     all: bool=True, # migration manifest variable
-    buildtag: str=None
+    buildtag: str=None # migration manifest variable
 ):
     """
     connects to a database and runs migrations
@@ -167,11 +167,11 @@ def runmigrations(
     """
     cur.execute(query_create_changelog)
     cnxn.commit()
-    # TODO find migrations already in target database
+    
+    # find migrations already in target database
     query_migrations_from_changelog = """
     SELECT migration_name from changelog
     """
-
     cur.execute(query_migrations_from_changelog)
     db_migrations = [n[0] for n in cur.fetchall()]
 
