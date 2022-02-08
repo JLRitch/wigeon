@@ -1,7 +1,7 @@
 # wigeon
 DB Migrations for the coninuous developer.
 
-This is a framework for building and deploying sql database migrations across your CI/CD-based applications!
+This is a framework and cli for building and deploying sql database migrations across your CI/CD-based development, just bring your sql skills and a database (or several)!
 
 **STILL VERY MUCH A WORK IN PROGRESS!!**
 
@@ -10,16 +10,18 @@ This is a framework for building and deploying sql database migrations across yo
 - Auto-iterated migration naming
 - Migration manifest management
 - Migration build tagging
+- connection manager
 - connection arguments passed at runtime to support deployment across multiple
   enviroments
-## Features to build
-- json manifests managed via environment variables
 - migration changelog written to target database
-- connection manager
-- connection via environment variables
 - deploy/run sql script migrations
+
+## Databases supported (at the moment)
 - sqlite support
+## Databases to support (soon)
 - mssqlserver support
+- postgres
+- mysql
 
 ## To use:
 NOTE: prefix every command with `python ` if you are running directly from a clone of the repo.
@@ -59,7 +61,7 @@ sudo apt install build-essential
 ```
 ### For ODBC on Ubuntu
 ```bash
-sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
+sudo apt-get install libssl-dev libffi-dev python3-dev
 sudo apt-get install -y unixodbc-dev
 ```
 

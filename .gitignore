@@ -13,3 +13,5 @@ dist/
 
 # package env
 packages/*/
+packages/**/
+packages/**/__init__.py
