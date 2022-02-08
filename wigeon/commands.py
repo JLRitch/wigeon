@@ -4,13 +4,14 @@ import pathlib as pl
 from typing import List
 import json
 import getpass
+import datetime
 
 # external imports
 import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
-from wigeon.dboperations import Connector
+from wigeon.db import Connector
 
 #################################
 ## Module level variables
@@ -68,9 +69,9 @@ def createmigration(
     typer.echo(f"Creating {migrationname} in {packagename} package...")
     # check if package exists
     package = Package(packagename=packagename)
-    package.exists(packagename=packagename)
+    package.exists()
     # find latest migration number
-    current_migrations = package.list_migrations(packagename=packagename)
+    current_migrations = package.list_migrations()
     current_migr_num = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration is: {current_migr_num}")
     # create migration
@@ -162,7 +163,7 @@ def runmigrations(
     # TODO initialize changelog table if not exists
     # TODO add columns change_number, completed_date, applied_by(username), and description(.sql filename)
     query_create_changelog = """
-    CREATE TABLE IF NOT EXISTS changelog (change_number, completed_date, applied_by, description);
+    CREATE TABLE IF NOT EXISTS changelog (change_id INTEGER NOT NULL PRIMARY KEY, migration_date TEXT, migration_name TEXT, applied_by TEXT);
     """
     cur.execute(query_create_changelog)
     cnxn.commit()
@@ -174,6 +175,21 @@ def runmigrations(
     mani_migrations = package.fetch_manifest_migrations(buildtag=buildtag)
     print(mani_migrations)
     # TODO run all migrations
+    for mig in mani_migrations:
+        with open(package.pack_path.joinpath(mig["name"]), "r") as f:
+            query = f.read()
+        cur.execute(query)
+        cur.execute(
+            "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
+            {
+                "migration_date": datetime.datetime.now().strftime("%Y%m%d-%H%M"),
+                "migration_name": mig["name"],
+                "applied_by": user
+            }
+        )
+    cnxn.commit()
+    cnxn.close()
+
     current_migrations = package.list_migrations()
     # TODO run migrations only with certain build tag
     # TODO run migrations in manifest, but not in db changelog table

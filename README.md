@@ -7,7 +7,7 @@ This is a framework for building and deploying sql database migrations across yo
 
 ## Features included
 - Database package creation
-- Auto-serialized Migration creation
+- Auto-iterated migration naming
 - Migration manifest management
 - Migration build tagging
 - connection arguments passed at runtime to support deployment across multiple
@@ -21,35 +21,9 @@ This is a framework for building and deploying sql database migrations across yo
 - sqlite support
 - mssqlserver support
 
-## To use (FROM GIT REPO):
-Access help:
-```bash
-python3 wigeon --help
-```
+## To use:
+NOTE: prefix every command with `python ` if you are running directly from a clone of the repo.
 
-Create `fly` package for `sqlite` with local, dev, qa, and prod environments:
-```bash
-python3 -m wigeon createpackage fly sqlite --environments=local,dev,qa,prod
-```
-
-Add migrations to the `fly` package with build tag of `0.0.1`:
-```bash
-python3 -m wigeon createmigration initialize_db fly 0.0.1
-python3 -m wigeon createmigration add_people_table fly 0.0.1
-python3 -m wigeon createmigration add_cars_table fly 0.0.1
-```
-
-List all migrations for the `fly` package:
-```bash
-python3 -m wigeon listmigrations fly
-```
-
-Run migrations for the `fly` package (a local sqlite connection):
-```bash
-python3 -m wigeon runmigrations fly --connstring=/path/to/exampledb.sqlite
-```
-
-## To use (FROM PIP INSTALL):
 Access help:
 ```bash
 wigeon --help
