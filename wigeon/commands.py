@@ -45,7 +45,6 @@ def createpackage(
      # check if package exists
     package = Package(packagename=packagename)
     package.exists(
-        packagename=packagename,
         raise_error_on_exists=True,
         raise_error_on_not_exist=False
     )
