@@ -2,7 +2,7 @@
 import pathlib as pl
 import sqlite3
 import datetime
-from typing import Union, List
+from typing import TypedDict, Union, List
 
 # external imports
 import pyodbc
@@ -11,16 +11,32 @@ import pyodbc
 from wigeon.packages import Package
 
 
+class Environment(TypedDict):
+    connection_string: str
+    server: str
+    database: str
+    username: str
+    password: str
+
 class Connector(object):
+
     db_engines = [
         "sqlite",
         "mssql",
         "postgres"
     ]
 
-    def __init__(self, db_engine: str):
-        self.db_engine = db_engine
+    def __init__(
+        self,
+        db_engine: str,
+        package: Package,
+        environment: Environment=None
+    ):
+        self.db_engine = package.manifest["db_engine"]
+        self.package = package
+        self.environment = environment
         self.cnxn = None
+
 
     def connect(
         self,
@@ -32,6 +48,9 @@ class Connector(object):
             "postgres": self.conn_postgres
         }
         # run connection method based on db_engine for package
+        if self.environment:
+            print(f"assigning env vars: {self.environment}")
+            kwargs = self.environment
         db_engines[self.db_engine](**kwargs)
         return self.cnxn
         
@@ -43,7 +62,7 @@ class Connector(object):
         """
         Connect to a sqlite database and return conn
         """
-        self.cnxn = sqlite3.connect(kwargs["connstring"])
+        self.cnxn = sqlite3.connect(kwargs["connectionstring"])
 
     def conn_mssql(self, **kwargs):
         raise NotImplementedError("conn_mssql is not yet implemented!")

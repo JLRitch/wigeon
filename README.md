@@ -53,6 +53,14 @@ Run migrations for the `fly` package (a local sqlite connection):
 wigeon runmigrations fly --connstring=/path/to/exampledb.sqlite
 ```
 
+OR
+
+IF package's manifest.json is configured appropriately for a "local" environment
+```bash
+wigeon runmigrations fly --environment=local
+```
+
+
 ## Requirements
 
 ### For gcc compiler on Ubuntu

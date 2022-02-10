@@ -11,7 +11,7 @@ import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
-from wigeon.db import Connector, Migration
+from wigeon.db import Connector, Environment, Migration
 
 #################################
 ## Module level variables
@@ -107,7 +107,8 @@ def connect(
     username: str=None,
     password: str=None,
     driver: str=None,
-    connstring: str=None
+    connectionstring: str=None,
+    environment: str=None
 ):
     """
     connects to a database
@@ -117,14 +118,25 @@ def connect(
     package.exists()
     package.read_manifest()
     # create connection, return cursor
-    cnxn = Connector(db_engine=package.manifest["db_engine"])
-    cur = cnxn.connect(
+    if environment:
+        cnxn = Connector(
+            db_engine=package.manifest["db_engine"],
+            package=package,
+            environment=package.manifest["environments"][environment]
+        )
+    else:
+        cnxn = Connector(
+            db_engine=package.manifest["db_engine"],
+            package=package,
+            environment=None
+        )
+    cnxn = cnxn.connect(
         server=server,
         database=database,
         username=username,
         password=password,
         driver=driver,
-        connstring=connstring
+        connectionstring=connectionstring
     )
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
 
@@ -136,7 +148,8 @@ def runmigrations(
     username: str=None, # connection variable
     password: str=None, # connection variable
     driver: str=None, # connection variable
-    connstring: str=None, # connection variable
+    connectionstring: str=None, # connection variable
+    environment: str=None, # migration manifest variable
     all: bool=True, # migration manifest variable
     buildtag: str=None # migration manifest variable
 ):
@@ -148,14 +161,25 @@ def runmigrations(
     package.exists()
     package.read_manifest()
     # create connection
-    connector = Connector(db_engine=package.manifest["db_engine"])
-    cnxn = connector.connect(
+    if environment:
+        cnxn = Connector(
+            db_engine=package.manifest["db_engine"],
+            package=package,
+            environment=package.manifest["environments"][environment]
+        )
+    else:
+        cnxn = Connector(
+            db_engine=package.manifest["db_engine"],
+            package=package,
+            environment=None
+        )
+    cnxn = cnxn.connect(
         server=server,
         database=database,
         username=username,
         password=password,
         driver=driver,
-        connstring=connstring
+        connectionstring=connectionstring
     )
     cur = cnxn.cursor()
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
