@@ -29,7 +29,6 @@ class Connector(object):
 
     def __init__(
         self,
-        db_engine: str,
         package: Package,
         environment: Environment=None
     ):

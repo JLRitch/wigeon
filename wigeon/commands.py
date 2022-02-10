@@ -119,13 +119,11 @@ def connect(
     # create connection, return cursor
     if environment:
         cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
             package=package,
             environment=package.manifest["environments"][environment]
         )
     else:
         cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
             package=package,
             environment=None
         )
