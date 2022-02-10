@@ -30,7 +30,7 @@ class Connector(object):
     def __init__(
         self,
         package: Package,
-        environment: Environment=None
+        environment: str=None
     ):
         self.db_engine = package.manifest["db_engine"]
         self.package = package
@@ -51,7 +51,8 @@ class Connector(object):
        # read environment name from Connector and collect envvariable names
        # extract environment variables to kwargs if variables exist
         if self.environment:
-            kwargs = self.environment
+            print(f"Connecting to {self.environment} environment...")
+            kwargs = self.package.manifest["environments"][self.environment]
             # dictionary comprehension ftwftwftw
             kwargs = {k:os.environ[v] for k,v in kwargs.items() if v}
 

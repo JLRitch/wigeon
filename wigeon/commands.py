@@ -117,17 +117,12 @@ def connect(
     package.exists()
     package.read_manifest()
     # create connection, return cursor
-    if environment:
-        cnxn = Connector(
-            package=package,
-            environment=package.manifest["environments"][environment]
-        )
-    else:
-        cnxn = Connector(
-            package=package,
-            environment=None
-        )
-    cnxn = cnxn.connect(
+    cnctr = Connector(
+        package=package,
+        environment=environment
+    )
+
+    cnxn = cnctr.connect(
         server=server,
         database=database,
         username=username,
@@ -158,19 +153,13 @@ def runmigrations(
     package.exists()
     package.read_manifest()
     # create connection
-    if environment:
-        cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
-            package=package,
-            environment=package.manifest["environments"][environment]
-        )
-    else:
-        cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
-            package=package,
-            environment=None
-        )
-    cnxn = cnxn.connect(
+
+    cnctr = Connector(
+        package=package,
+        environment=environment
+    )
+
+    cnxn = cnctr.connect(
         server=server,
         database=database,
         username=username,

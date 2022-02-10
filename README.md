@@ -24,7 +24,7 @@ This is a framework and cli for building and deploying sql database migrations a
 - mysql
 
 ## To use:
-NOTE: prefix every command with `python ` if you are running directly from a clone of the repo.
+NOTE: prefix every command with `python` if you are running directly from a clone of the repo.
 
 Access help:
 ```bash
@@ -36,12 +36,65 @@ Create `fly` package for `sqlite` with local, dev, qa, and prod environments:
 wigeon createpackage fly sqlite --environments=local,dev,qa,prod
 ```
 
-Add migrations to the `fly` package with build tag of `0.0.1` :
+Create databases to connect to for each environment:
+```bash
+sqlite3
+.open fly-local.sqlite
+.open fly-dev.sqlite
+.open fly-qa.sqlite
+.open fly-prod.sqlite
+```
+
+(OPTIONAL) Set up environment variables and add to package manifest.json:
+```bash
+export LOCAL_CONNECTION_STRING=/home/usr/wigeon/fly-local.sqlite
+export DEV_CONNECTION_STRING=/home/usr/wigeon/fly-dev.sqlite
+export QA_CONNECTION_STRING=/home/usr/wigeon/fly-qa.sqlite
+export PROD_CONNECTION_STRING=/home/usr/wigeon/fly-prod.sqlite
+```
+
+(OPTIONAL) Add environment variable names to manifest.json:
+```json
+  "environments": {
+      "local": {
+          "connectionstring": "LOCAL_CONNECTION_STRING",
+          "server": null,
+          "database": null,
+          "username": null,
+          "password:": null
+      },
+      "dev": {
+          "connectionstring": "DEV_CONNECTION_STRING",
+          "server": null,
+          "database": null,
+          "username": null,
+          "password:": null
+      },
+      "qa": {
+          "connectionstring": "QA_CONNECTION_STRING",
+          "server": null,
+          "database": null,
+          "username": null,
+          "password:": null
+      },
+      "prod": {
+          "connectionstring": "PROD_CONNECTION_STRING",
+          "server": null,
+          "database": null,
+          "username": null,
+          "password:": null
+      }
+  }
+```
+
+Add migrations to the `fly` package with build tag of `0.0.1`:
 ```bash
 wigeon createmigration initialize_db fly 0.0.1
 wigeon createmigration add_people_table fly 0.0.1
 wigeon createmigration add_cars_table fly 0.0.1
 ```
+
+**SCRIPT SOME SQL IN THOSE MIGRATION FILES!!!**
 
 List all migrations for the `fly` package:
 ```bash
