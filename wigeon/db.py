@@ -1,5 +1,6 @@
 # standard imports
 import pathlib as pl
+import os
 import sqlite3
 import datetime
 from typing import TypedDict, Union, List
@@ -47,10 +48,15 @@ class Connector(object):
             "mssql": self.conn_mssql,
             "postgres": self.conn_postgres
         }
-        # run connection method based on db_engine for package
+       
+       # read environment name from Connector and collect envvariable names
+       # extract environment variables to kwargs if variables exist
         if self.environment:
-            print(f"assigning env vars: {self.environment}")
             kwargs = self.environment
+            # dictionary comprehension ftwftwftw
+            kwargs = {k:os.environ[v] for k,v in kwargs.items() if v}
+
+         # run connection method based on db_engine for package
         db_engines[self.db_engine](**kwargs)
         return self.cnxn
         
@@ -62,7 +68,9 @@ class Connector(object):
         """
         Connect to a sqlite database and return conn
         """
-        self.cnxn = sqlite3.connect(kwargs["connectionstring"])
+        if kwargs["connectionstring"]:
+            self.cnxn = sqlite3.connect(kwargs["connectionstring"])
+            return self.cnxn
 
     def conn_mssql(self, **kwargs):
         raise NotImplementedError("conn_mssql is not yet implemented!")
