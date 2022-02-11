@@ -3,23 +3,30 @@ DB Migrations for the continuous developer.
 
 This is a framework and cli for building and deploying sql database migrations across your CI/CD-based development, just bring your sql skills and a database (or several)!
 
-**STILL VERY MUCH A WORK IN PROGRESS!!**
+## Why wigeon?
+Your applications are continuously delivered, why not your databases too?
+
+Like its namesake, wigeon is compact, portable, and easily able to fit itself into your
+repos/actions/pipelines/etc. to compliment the continuous patterns you worked so hard
+to put into place.
+
+No ORM or language specific migration syntax means anyone who can `SELECT *` can automate
+and continuously integrate/deliver data goodness to their apps/teams.
 
 ## Features included
 - Database package creation
 - Auto-iterated migration naming
 - Migration manifest management
 - Migration build tagging
-- connection manager
-- connection arguments passed at runtime to support deployment across multiple
-  enviroments
-- migration changelog written to target database
-- deploy/run sql script migrations
+- Connection manager
+- Simple connection definitions via environment variables
+- Migration changelog written to target database
+- Deploy/run sql script migrations
 
 ## Databases supported (at the moment)
-- sqlite support
-## Databases to support (soon)
-- mssqlserver support
+- sqlite
+## Databases to support (very soon)
+- mssqlserver
 - postgres
 - mysql
 
