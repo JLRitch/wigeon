@@ -5,7 +5,7 @@ DB Migrations for the continuous developer.
 Your applications are continuously delivered, why not your databases too?
 
 Like its namesake, wigeon is compact, portable, and easily able to fit itself into your
-repos/actions/pipelines/etc. to compliment the continuous patterns you worked so hard
+repos/actions/pipelines/etc. to complement the continuous patterns you worked so hard
 to put into place.
 
 No ORM or language specific migration syntax means anyone who can `SELECT *` can automate
