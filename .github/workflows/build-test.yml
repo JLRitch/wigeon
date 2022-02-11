@@ -12,6 +12,8 @@ on:
     branches:
       - main
       - '*.x'
+  paths-ignore:
+    - '*md'
 
 jobs:
   build:
