@@ -142,7 +142,7 @@ def runmigrations(
     driver: str=None, # connection variable
     connectionstring: str=None, # connection variable
     environment: str=None, # migration manifest variable
-    all: bool=True, # migration manifest variable
+    all: bool=False, # migration manifest variable
     buildtag: str=None # migration manifest variable
 ):
     """
@@ -189,10 +189,12 @@ def runmigrations(
     # filter to migrations only with certain build tag
     mani_migrations = [Migration(**m) for m in package.fetch_manifest_migrations(buildtag=buildtag)]
 
-    # run migrations if not already in db
+    # find migrations alead in the database
     duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
     print(f"Migrations already in db: {duplicate_migrations}")
-    mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
+    # remove duplicate migrations from manifest, unless all option is given
+    if not all:
+        mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
     print(f"Migrations to run: {mani_migrations}")
     for mig in mani_migrations:
         if mig.name in db_migrations:

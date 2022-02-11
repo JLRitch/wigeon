@@ -6,7 +6,7 @@ import datetime
 from typing import TypedDict, Union, List
 
 # external imports
-import pyodbc
+# import pyodbc
 
 # project imports
 from wigeon.packages import Package
@@ -97,7 +97,7 @@ class Migration(object):
     def run(
         self,
         package: Package,
-        cursor: Union[sqlite3.Cursor, pyodbc.Cursor],
+        cursor: Union[sqlite3.Cursor, str], # TODO replace str with pyodbc.cursor once implemented
         user: str
     ):
         with open(package.pack_path.joinpath(self.name), "r") as f:
