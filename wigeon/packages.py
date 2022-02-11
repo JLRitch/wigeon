@@ -58,7 +58,13 @@ class Package(object):
         manifest_template["db_engine"] = db_engine
         manifest_template["environments"] = {}
         for e in env_list:
-            manifest_template["environments"][e] = {"connection": "TODO"}
+            manifest_template["environments"][e] = {
+                "connectionstring": None,
+                "server": None,
+                "database": None,
+                "username": None,
+                "password:": None
+            }
         manifest_template["migrations"] = []
 
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:

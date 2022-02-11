@@ -11,7 +11,7 @@ import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
-from wigeon.db import Connector, Environment, Migration
+from wigeon.db import Connector, Migration
 
 #################################
 ## Module level variables
@@ -45,7 +45,6 @@ def createpackage(
      # check if package exists
     package = Package(packagename=packagename)
     package.exists(
-        packagename=packagename,
         raise_error_on_exists=True,
         raise_error_on_not_exist=False
     )
@@ -118,19 +117,12 @@ def connect(
     package.exists()
     package.read_manifest()
     # create connection, return cursor
-    if environment:
-        cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
-            package=package,
-            environment=package.manifest["environments"][environment]
-        )
-    else:
-        cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
-            package=package,
-            environment=None
-        )
-    cnxn = cnxn.connect(
+    cnctr = Connector(
+        package=package,
+        environment=environment
+    )
+
+    cnxn = cnctr.connect(
         server=server,
         database=database,
         username=username,
@@ -150,7 +142,7 @@ def runmigrations(
     driver: str=None, # connection variable
     connectionstring: str=None, # connection variable
     environment: str=None, # migration manifest variable
-    all: bool=True, # migration manifest variable
+    all: bool=False, # migration manifest variable
     buildtag: str=None # migration manifest variable
 ):
     """
@@ -161,19 +153,13 @@ def runmigrations(
     package.exists()
     package.read_manifest()
     # create connection
-    if environment:
-        cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
-            package=package,
-            environment=package.manifest["environments"][environment]
-        )
-    else:
-        cnxn = Connector(
-            db_engine=package.manifest["db_engine"],
-            package=package,
-            environment=None
-        )
-    cnxn = cnxn.connect(
+
+    cnctr = Connector(
+        package=package,
+        environment=environment
+    )
+
+    cnxn = cnctr.connect(
         server=server,
         database=database,
         username=username,
@@ -203,10 +189,12 @@ def runmigrations(
     # filter to migrations only with certain build tag
     mani_migrations = [Migration(**m) for m in package.fetch_manifest_migrations(buildtag=buildtag)]
 
-    # run migrations if not already in db
+    # find migrations alead in the database
     duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
     print(f"Migrations already in db: {duplicate_migrations}")
-    mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
+    # remove duplicate migrations from manifest, unless all option is given
+    if not all:
+        mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
     print(f"Migrations to run: {mani_migrations}")
     for mig in mani_migrations:
         if mig.name in db_migrations:

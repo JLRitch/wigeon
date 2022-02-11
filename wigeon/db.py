@@ -1,11 +1,12 @@
 # standard imports
 import pathlib as pl
+import os
 import sqlite3
 import datetime
 from typing import TypedDict, Union, List
 
 # external imports
-import pyodbc
+# import pyodbc
 
 # project imports
 from wigeon.packages import Package
@@ -28,9 +29,8 @@ class Connector(object):
 
     def __init__(
         self,
-        db_engine: str,
         package: Package,
-        environment: Environment=None
+        environment: str=None
     ):
         self.db_engine = package.manifest["db_engine"]
         self.package = package
@@ -47,10 +47,16 @@ class Connector(object):
             "mssql": self.conn_mssql,
             "postgres": self.conn_postgres
         }
-        # run connection method based on db_engine for package
+       
+       # read environment name from Connector and collect envvariable names
+       # extract environment variables to kwargs if variables exist
         if self.environment:
-            print(f"assigning env vars: {self.environment}")
-            kwargs = self.environment
+            print(f"Connecting to {self.environment} environment...")
+            kwargs = self.package.manifest["environments"][self.environment]
+            # dictionary comprehension ftwftwftw
+            kwargs = {k:os.environ[v] for k,v in kwargs.items() if v}
+
+         # run connection method based on db_engine for package
         db_engines[self.db_engine](**kwargs)
         return self.cnxn
         
@@ -62,7 +68,9 @@ class Connector(object):
         """
         Connect to a sqlite database and return conn
         """
-        self.cnxn = sqlite3.connect(kwargs["connectionstring"])
+        if kwargs["connectionstring"]:
+            self.cnxn = sqlite3.connect(kwargs["connectionstring"])
+            return self.cnxn
 
     def conn_mssql(self, **kwargs):
         raise NotImplementedError("conn_mssql is not yet implemented!")
@@ -89,7 +97,7 @@ class Migration(object):
     def run(
         self,
         package: Package,
-        cursor: Union[sqlite3.Cursor, pyodbc.Cursor],
+        cursor: Union[sqlite3.Cursor, str], # TODO replace str with pyodbc.cursor once implemented
         user: str
     ):
         with open(package.pack_path.joinpath(self.name), "r") as f:
