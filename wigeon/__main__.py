@@ -3,7 +3,7 @@
 # external imports
 
 # project imports
-from wigeon import main
+from wigeon import main # pragma: no cover
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     main.app()

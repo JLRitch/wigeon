@@ -164,3 +164,8 @@ source ~/.bashrc
 # optional: for unixODBC development headers
 sudo apt-get install -y unixodbc-dev
 ```
+
+## running tests
+```bash
+ python -m pytest --cov-report term-missing --cov-report html --cov=wigeon test/
+ ```

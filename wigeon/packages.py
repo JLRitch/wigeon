@@ -74,13 +74,13 @@ class Package(object):
         """
         Package.delete removes the package directory from os
         """
-        shutil.rmtree(self.pack_path)
+        shutil.rmtree(self.pack_path, ignore_errors=True)
     
     def list_migrations(
         self
     ) -> list:
         """
-        list_mgrations reads a package and returns a list of all the migrations
+        list_mgrations reads a package and returns a list of all the migrations in the folder
         """
         return [f for f in Package.pack_folder.joinpath(self.packagename).iterdir() if f.suffix == ".sql"]
 
@@ -137,7 +137,7 @@ class Package(object):
             raise ValueError(
                 f"{self.__class__} {self.packagename}'s manifest not yet read or built. Wigeon will not write nonetype manifest."
             )
-        if buildtag:
+        if buildtag: # pragma: no cover
             # TODO implement filtering by build tag
             raise NotImplementedError("Build tag filtering not yet implemented!")
             migrations = {k:v for k,v in self.manifest["migrations"] if buildtag in v["builds"]}
