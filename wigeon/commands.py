@@ -11,7 +11,7 @@ import typer # using for quick build of cli prototype
 
 # project imports
 from wigeon.packages import Package
-from wigeon.db import Connector, Environment, Migration
+from wigeon.db import Connector, Migration
 
 #################################
 ## Module level variables
