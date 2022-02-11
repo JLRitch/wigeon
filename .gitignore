@@ -15,3 +15,7 @@ dist/
 packages/*/
 packages/**/
 packages/**/__init__.py
+
+# testing
+.coverage
+htmlcov/
