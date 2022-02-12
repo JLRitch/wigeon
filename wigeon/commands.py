@@ -8,6 +8,7 @@ import datetime
 
 # external imports
 import typer # using for quick build of cli prototype
+import pymssql
 
 # project imports
 from wigeon.packages import Package
@@ -38,6 +39,8 @@ def createpackage(
     createpackage initializes a package of migrations in the current
     environment. A package is linked directly to a database type and the
     deployment environments in your ci/cd pipeline.
+
+    dbtype either sqlite, mssql, or postgres
     """
     typer.echo(f"Creating {packagename} package")
     typer.echo(f"{packagename}'s Database type is {dbtype}")
@@ -131,6 +134,7 @@ def connect(
         connectionstring=connectionstring
     )
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
+    cnxn.close()
 
 @app.command()
 def runmigrations(
@@ -172,16 +176,15 @@ def runmigrations(
 
     # initialize changelog table if not exists and add columns
     # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
-    query_create_changelog = """
-    CREATE TABLE IF NOT EXISTS changelog (change_id INTEGER NOT NULL PRIMARY KEY, migration_date TEXT, migration_name TEXT, applied_by TEXT);
-    """
-    cur.execute(query_create_changelog)
-    cnxn.commit()
+    print(f"init query: {cnctr.changeloginit}")
+    try:
+        cur.execute(cnctr.changeloginit)
+    except pymssql._pymssql.OperationalError:
+        print("changelog exists")
     
     # find migrations already in target database
-    query_migrations_from_changelog = """
-    SELECT migration_name from changelog
-    """
+    query_migrations_from_changelog = "SELECT migration_name from changelog;"
+
     cur.execute(query_migrations_from_changelog)
     db_migrations = [n[0] for n in cur.fetchall()]
 
@@ -200,14 +203,16 @@ def runmigrations(
         if mig.name in db_migrations:
             duplicate_migrations.append(mig.name)
             continue
+        print(f"Running {mig}... ", end='')
         mig.run(
             package=package,
             cursor=cur,
             user=user
         )
+        print("SUCCESS")
     print(f"Successfully ran {len(mani_migrations)} migrations")
     cnxn.commit()
     cnxn.close()
-
+    print()
 if __name__ == "__main__":
     app()
