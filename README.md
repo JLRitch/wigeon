@@ -58,6 +58,16 @@ export QA_CONNECTION_STRING=/home/usr/wigeon/fly-qa.sqlite
 export PROD_CONNECTION_STRING=/home/usr/wigeon/fly-prod.sqlite
 ```
 
+(OPTIONAL) If running mssql in docker you might Set up environment variables and
+add to package manifest.json:
+```bash
+export LOCAL_MSSQL_SERVER=0.0.0.0:1433
+export LOCAL_MSSQL_DBNAME=tempdb
+export LOCAL_MSSQL_USERNAME=sa
+export LOCAL_MSSQL_PASSWORD=SApass123
+```
+
+
 (OPTIONAL) Add environment variable names to manifest.json:
 ```json
   "environments": {
@@ -167,5 +177,5 @@ sudo apt-get install -y unixodbc-dev
 
 ## running tests
 ```bash
- python -m pytest --cov-report term-missing --cov-report html --cov=wigeon test/
+ python -m pytest --cov-report term-missing --cov=wigeon test/
  ```

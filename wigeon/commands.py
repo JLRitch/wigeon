@@ -176,7 +176,6 @@ def runmigrations(
 
     # initialize changelog table if not exists and add columns
     # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
-    print(f"init query: {cnctr.changeloginit}")
     try:
         cur.execute(cnctr.changeloginit)
     except pymssql._pymssql.OperationalError:
@@ -186,7 +185,11 @@ def runmigrations(
     query_migrations_from_changelog = "SELECT migration_name from changelog;"
 
     cur.execute(query_migrations_from_changelog)
-    db_migrations = [n[0] for n in cur.fetchall()]
+    try:
+        db_migrations = [n[0] for n in cur.fetchall()]
+    except IndexError as e:
+        print("No index 0 in db migration return")
+        exit()
 
     # find migrations in manifest
     # filter to migrations only with certain build tag
@@ -199,20 +202,23 @@ def runmigrations(
     if not all:
         mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
     print(f"Migrations to run: {mani_migrations}")
-    for mig in mani_migrations:
-        if mig.name in db_migrations:
-            duplicate_migrations.append(mig.name)
-            continue
-        print(f"Running {mig}... ", end='')
-        mig.run(
-            package=package,
-            cursor=cur,
-            user=user
-        )
-        print("SUCCESS")
-    print(f"Successfully ran {len(mani_migrations)} migrations")
-    cnxn.commit()
-    cnxn.close()
+    if len(mani_migrations) > 0:
+        for mig in mani_migrations:
+            if mig.name in db_migrations:
+                duplicate_migrations.append(mig.name)
+                continue
+            print(f"Running migration {mig}... ", end='')
+            mig.run(
+                package=package,
+                cursor=cur,
+                user=user
+            )
+            print("SUCCESS")
+        print(f"Successfully ran {len(mani_migrations)} migrations")
+        # cnxn.commit()
+        cnxn.close()
+    else:
+        print("No migrations to run, wigeon is flying home...")
     print()
 if __name__ == "__main__":
     app()

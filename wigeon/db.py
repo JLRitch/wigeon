@@ -39,7 +39,7 @@ class Connector(object):
         self.cnxn = None
         self.changeloginit = {
             "sqlite": "CREATE TABLE IF NOT EXISTS changelog (change_id INTEGER NOT NULL PRIMARY KEY, migration_date TEXT, migration_name TEXT, applied_by TEXT);",
-            "mssql":  "CREATE TABLE changelog (change_id INT NOT NULL, migration_date TEXT, migration_name TEXT, applied_by TEXT);"
+            "mssql":  """CREATE TABLE changelog (change_id INT NOT NULL IDENTITY PRIMARY KEY, migration_date TEXT, migration_name TEXT, applied_by TEXT);"""
         }[self.db_engine]
 
 
@@ -129,11 +129,20 @@ class Migration(object):
         with open(package.pack_path.joinpath(self.name), "r") as f:
             query = f.read()
         cursor.execute(query)
-        cursor.execute(
-            "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
-            {
-                "migration_date": datetime.datetime.now().strftime("%Y%m%d-%H%M"),
-                "migration_name":self.name,
-                "applied_by": user
-            }
-        )
+
+        migration_date = datetime.datetime.now().strftime("%Y%m%d-%H%M"),
+
+        if package.manifest["db_engine"] == "sqlite":
+            cursor.execute(
+                "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
+                {
+                    "migration_date": migration_date,
+                    "migration_name":self.name,
+                    "applied_by": user
+                }
+            )
+        if package.manifest["db_engine"] == "mssql":
+            cursor.execute(
+                "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES (%s, %s, %s)",
+                (migration_date, self.name, user)
+            )
