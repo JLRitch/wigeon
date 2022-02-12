@@ -63,7 +63,7 @@ class Package(object):
                 "server": None,
                 "database": None,
                 "username": None,
-                "password:": None
+                "password": None
             }
         manifest_template["migrations"] = []
 
