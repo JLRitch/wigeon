@@ -18,7 +18,7 @@ class Package(object):
     ):
         self.packagename = packagename
         self.pack_path = Package.pack_folder.joinpath(packagename)
-        self.manifest = None
+        self.manifest = self.read_manifest()
 
     def exists(
         self,
@@ -117,8 +117,11 @@ class Package(object):
         return str(current_migration).zfill(4)
 
     def read_manifest(self):
-        with open(self.pack_path.joinpath("manifest.json"), "r") as f:
-            self.manifest = json.load(f)
+        try:
+            with open(self.pack_path.joinpath("manifest.json"), "r") as f:
+                self.manifest = json.load(f)
+        except FileNotFoundError:
+            print(f"Cannot access: {self.pack_path.joinpath('manifest.json')}, package might not exist yet.")
 
     def write_manifest(self):
         if not self.manifest:
