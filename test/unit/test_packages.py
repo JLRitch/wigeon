@@ -43,14 +43,14 @@ class TestPackage(unittest.TestCase):
                     "server": None,
                     "database": None,
                     "username": None,
-                    "password:": None
+                    "password": None
                 },
                 "qa": {
                     "connectionstring": None,
                     "server": None,
                     "database": None,
                     "username": None,
-                    "password:": None
+                    "password": None
                 }
             },
             "migrations": []
