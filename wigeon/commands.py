@@ -120,18 +120,14 @@ def connect(
     package.exists()
     package.read_manifest()
     # create connection, return cursor
-    cnctr = Connector(
-        package=package,
-        environment=environment
-    )
-
-    cnxn = cnctr.connect(
+    cnxn = package.connect(
         server=server,
         database=database,
         username=username,
         password=password,
         driver=driver,
-        connectionstring=connectionstring
+        connectionstring=connectionstring,
+        environment=environment
     )
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
     cnxn.close()
@@ -156,20 +152,16 @@ def runmigrations(
     package = Package(packagename=packagename)
     package.exists()
     package.read_manifest()
+
     # create connection
-
-    cnctr = Connector(
-        package=package,
-        environment=environment
-    )
-
-    cnxn = cnctr.connect(
+    cnxn = package.connect(
         server=server,
         database=database,
         username=username,
         password=password,
         driver=driver,
-        connectionstring=connectionstring
+        connectionstring=connectionstring,
+        environment=environment
     )
     cur = cnxn.cursor()
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")

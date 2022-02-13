@@ -7,6 +7,8 @@ from typing import List
 # external imports
 
 # project imports
+from wigeon.db import Connector, Migration
+from wigeon.manifests import Environment, Manifest
 
 
 class Package(object):
@@ -19,6 +21,8 @@ class Package(object):
         self.packagename = packagename
         self.pack_path = Package.pack_folder.joinpath(packagename)
         self.manifest = self.read_manifest()
+        self.connector = None
+        self.connection = None
 
     def exists(
         self,
@@ -164,8 +168,31 @@ class Package(object):
             }
         )
         self.write_manifest()
+    
+    def create_connector(self, environment: str=None):
+        self.connector = Connector(
+            manifest=self.manifest,
+            environment=self.manifest["environments"][environment]
+        )
+    
+    def connect(
+        self,
+        server: str=None, # connection variable
+        database: str=None, # connection variable
+        username: str=None, # connection variable
+        password: str=None, # connection variable
+        driver: str=None, # connection variable
+        connectionstring: str=None, # connection variable,
+        environment: Environment=None
+    ):
+        self.create_connector(environment=environment)
+        self.connection = self.connector.connect(
+            server=server,
+            database=database,
+            username=username,
+            password=password,
+            driver=driver,
+            connectionstring=connectionstring
+        )
 
-class manifest(object):
-
-    def __init__(self):
-        pass
+        return self.connection

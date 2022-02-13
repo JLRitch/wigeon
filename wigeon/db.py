@@ -10,15 +10,7 @@ from typing import TypedDict, Union, List
 import pymssql
 
 # project imports
-from wigeon.packages import Package
-
-
-class Environment(TypedDict):
-    connection_string: str
-    server: str
-    database: str
-    username: str
-    password: str
+from wigeon.manifests import Environment, Manifest
 
 class Connector(object):
 
@@ -30,11 +22,11 @@ class Connector(object):
 
     def __init__(
         self,
-        package: Package,
-        environment: str=None
+        manifest: Manifest,
+        environment: Environment
     ):
-        self.db_engine = package.manifest["db_engine"]
-        self.package = package
+        self.db_engine = manifest["db_engine"]
+        self.manifest = manifest
         self.environment = environment
         self.cnxn = None
         self.changeloginit = {
@@ -56,13 +48,14 @@ class Connector(object):
        # read environment name from Connector and collect envvariable names
        # extract environment variables to kwargs if variables exist
         if self.environment:
-            print(f"Connecting to {self.environment} environment...")
-            kwargs = self.package.manifest["environments"][self.environment]
+            print(f"Connecting to {self.environment} environment...", end=" ")
+            kwargs = self.environment
             # dictionary comprehension ftwftwftw
             kwargs = {k:os.environ[v] for k,v in kwargs.items() if v}
 
          # run connection method based on db_engine for package
         db_engines[self.db_engine](**kwargs)
+        print("SUCCESS")
         return self.cnxn
         
 
@@ -122,17 +115,17 @@ class Migration(object):
 
     def run(
         self,
-        package: Package,
+        package_path: pl.Path,
         cursor: Union[sqlite3.Cursor, str], # TODO replace str with pyodbc.cursor once implemented
         user: str
     ):
-        with open(package.pack_path.joinpath(self.name), "r") as f:
+        with open(package_path.pack_path.joinpath(self.name), "r") as f:
             query = f.read()
         cursor.execute(query)
 
         migration_date = datetime.datetime.now().strftime("%Y%m%d-%H%M"),
 
-        if package.manifest["db_engine"] == "sqlite":
+        if self.manifest["db_engine"] == "sqlite":
             cursor.execute(
                 "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
                 {
@@ -141,7 +134,7 @@ class Migration(object):
                     "applied_by": user
                 }
             )
-        if package.manifest["db_engine"] == "mssql":
+        if self.manifest["db_engine"] == "mssql":
             cursor.execute(
                 "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES (%s, %s, %s)",
                 (migration_date, self.name, user)
