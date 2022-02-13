@@ -1,5 +1,7 @@
 # wigeon
 DB Migrations for the continuous developer.
+---
+[![Build and test](https://github.com/JLRitch/wigeon/actions/workflows/build-test.yml/badge.svg)](https://github.com/JLRitch/wigeon/actions/workflows/build-test.yml)
 
 ## Why wigeon?
 Your applications are continuously delivered, why not your databases too?
