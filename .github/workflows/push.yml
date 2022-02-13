@@ -5,13 +5,17 @@ on:
     branches:
       - main
 
-steps:
-  - shell: bash
-    env:
-      PYPI_TOKEN: ${{ secrets.PYPIACCESS }}
-    run: |
-      python3 -m pip install --upgrade pip
-      pip install setuptools wheel twine
-      python3 setup.py sdist bdist_wheel
-      python3 -m twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - shell: bash
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPIACCESS }}
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install setuptools wheel twine
+          python3 setup.py sdist bdist_wheel
+          python3 -m twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
 
