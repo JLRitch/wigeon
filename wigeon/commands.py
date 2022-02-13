@@ -169,7 +169,7 @@ def runmigrations(
     # initialize changelog table if not exists and add columns
     # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
     try:
-        cur.execute(cnctr.changeloginit)
+        cur.execute(package.connector.changeloginit)
     except pymssql._pymssql.OperationalError:
         print("changelog exists")
     
