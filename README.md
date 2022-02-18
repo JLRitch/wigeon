@@ -31,9 +31,22 @@ to their apps/teams.
 - mysql
 
 ## Setup
+### Direct Install
 ```shell
 pip install wigeon
 ```
+
+### Via Docker-Compose
+```shell
+docker-compose up
+```
+Attach a shell to the wigeon_cli container. You can create packages/migrations and run them against
+db services in the docker-compose network. Package files will write to your local compute using
+volume mounts.
+
+You can edit environment variable names in your local manifest.json which will propigate to the cli service,
+where the values for those variables are read. To change your target database, you will need to edit env
+variables in the docker-compose file.
 
 ## To use:
 NOTE: prefix every command with `python` if you are running directly from a clone of the repo.
@@ -149,38 +162,8 @@ sudo apt-get install -y unixodbc-dev
 ```
 
 ### For mssql-server ODBC on Ubuntu
-Found at:
+Docs for installing sqlserver odbc drivers (not yet supported):
 https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15
-
-```bash
-sudo su
-curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-
-#Download appropriate package for the OS version
-#Choose only ONE of the following, corresponding to your OS version
-
-#Ubuntu 16.04
-curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-#Ubuntu 18.04
-curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-#Ubuntu 20.04
-curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-#Ubuntu 21.04
-curl https://packages.microsoft.com/config/ubuntu/21.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-exit
-sudo apt-get update
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
-# optional: for bcp and sqlcmd
-sudo ACCEPT_EULA=Y apt-get install -y mssql-tools
-echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
-source ~/.bashrc
-# optional: for unixODBC development headers
-sudo apt-get install -y unixodbc-dev
-```
 
 ## running tests
 ```bash

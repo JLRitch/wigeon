@@ -1,7 +1,26 @@
 version: '3'
 
+# CREDENTIALS IN THIS FILE ARE MEANT FOR DEV/EXAMPLE ONLY
+
 services:
-  mssql-service-dev:
+  cli:
+    build: .
+    entrypoint: /bin/sh
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - "$PWD/packages:/opt/packages"
+    environment:
+      - LOCAL_MSSQL_SERVER=mssql-dev:1433
+      - LOCAL_MSSQL_DBNAME=tempdb
+      - LOCAL_MSSQL_USERNAME=sa
+      - LOCAL_MSSQL_PASSWORD=SApass123
+      - QA_MSSQL_SERVER=mssql-dev:1443
+      - QA_MSSQL_DBNAME=tempdb
+      - QA_MSSQL_USERNAME=sa
+      - QA_MSSQL_PASSWORD=saPASS321
+    
+  mssql-dev:
     container_name: db-mssql-dev
     image: mcr.microsoft.com/mssql/server:2019-CU5-ubuntu-16.04
     ports:
@@ -13,7 +32,7 @@ services:
       - SA_PASSWORD=SApass123
       - MSSQL_PID=Developer
 
-  mssql-service-qa:
+  mssql-qa:
     container_name: db-mssql-qa
     image: mcr.microsoft.com/mssql/server:2019-CU5-ubuntu-16.04
     ports:
@@ -25,19 +44,19 @@ services:
       - SA_PASSWORD=saPASS321
       - MSSQL_PID=Developer
   
-    postgres-service:
-      image: postgres:10.5
-      restart: always
-      environment:
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=postgres
-      logging:
-        options:
-          max-size: 10m
-          max-file: "3"
-      ports:
-        - '5432:5432'
-      volumes: 
-        - ./postgres-data:/var/lib/postgresql/data
+  #   postgres-service:
+  #     image: postgres:10.5
+  #     restart: always
+  #     environment:
+  #       - POSTGRES_USER=postgres
+  #       - POSTGRES_PASSWORD=postgres
+  #     logging:
+  #       options:
+  #         max-size: 10m
+  #         max-file: "3"
+  #     ports:
+  #       - '5432:5432'
+  #     volumes: 
+  #       - ./postgres-data:/var/lib/postgresql/data
         # copy the sql script to create tables
         # - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql

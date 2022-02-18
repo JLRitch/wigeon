@@ -38,7 +38,7 @@ env_marker_below_38 = "python_version < '3.8'"
 minimal_requirements = [
     "click>=8.0.3",
     "typer>=0.4.0",
-    "pyodbc>=4.0.32"
+    "pymssql>=2.2.4"
 ]
 
 
