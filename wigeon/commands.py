@@ -11,8 +11,8 @@ import typer # using for quick build of cli prototype
 import pymssql
 
 # project imports
+import wigeon
 from wigeon.packages import Package
-from wigeon.db import Connector, Migration
 
 #################################
 ## Module level variables
@@ -29,6 +29,13 @@ user = getpass.getuser()
 #################################
 ## CLI Commands
 #################################
+@app.command()
+def version():
+    """
+    returns the version of wigeon
+    """
+    typer.echo(wigeon.__version__)
+
 @app.command()
 def createpackage(
     packagename: str,
@@ -73,7 +80,7 @@ def createmigration(
     package = Package(packagename=packagename)
     package.exists()
     # find latest migration number
-    current_migrations = package.list_migrations()
+    current_migrations = package.list_local_migrations()
     current_migr_num = package.find_current_migration(migration_list=current_migrations)
     typer.echo(f"Current migration is: {current_migr_num}")
     # create migration
@@ -95,7 +102,7 @@ def listmigrations(
     package = Package(packagename=packagename)
     package.exists()
     typer.echo(f"Found following migrations for {packagename}:")
-    current_migrations = package.list_migrations()
+    current_migrations = package.list_local_migrations()
     for m in sorted(current_migrations):
         typer.echo(f"    {m.name}")
     current_migr = package.find_current_migration(migration_list=current_migrations)
@@ -153,8 +160,8 @@ def runmigrations(
     package.exists()
     package.read_manifest()
 
-    # create connection
-    cnxn = package.connect(
+    # create connection and retreive cursor
+    package.connect(
         server=server,
         database=database,
         username=username,
@@ -163,36 +170,32 @@ def runmigrations(
         connectionstring=connectionstring,
         environment=environment
     )
-    cur = cnxn.cursor()
     typer.echo(f"Successfully connected to {package.manifest['db_engine']} database!!!!")
 
     # initialize changelog table if not exists and add columns
     # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
-    try:
-        cur.execute(package.connector.changeloginit)
-    except pymssql._pymssql.OperationalError:
-        print("changelog exists")
-    
-    # find migrations already in target database
-    query_migrations_from_changelog = "SELECT migration_name from changelog;"
+    package.init_changelog()
 
-    cur.execute(query_migrations_from_changelog)
-    try:
-        db_migrations = [n[0] for n in cur.fetchall()]
-    except IndexError as e:
-        print("No index 0 in db migration return")
-        exit()
+    # find migrations already in target database
+    db_migrations = package.list_db_migrations()
 
     # find migrations in manifest
     # filter to migrations only with certain build tag
-    mani_migrations = [Migration(**m) for m in package.fetch_manifest_migrations(buildtag=buildtag)]
+    mani_migrations = package.list_manifest_migrations(buildtag=buildtag)
+    print(f"Migrations in manifest: {mani_migrations}")
+
 
     # find migrations alead in the database
-    duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
+    # duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
+    duplicate_migrations = package.compare_migrations(
+        manifest_migrations=mani_migrations,
+        db_migrations=db_migrations
+    )
     print(f"Migrations already in db: {duplicate_migrations}")
     # remove duplicate migrations from manifest, unless all option is given
     if not all:
         mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
+
     print(f"Migrations to run: {mani_migrations}")
     if len(mani_migrations) > 0:
         for mig in mani_migrations:
@@ -201,16 +204,17 @@ def runmigrations(
                 continue
             print(f"Running migration {mig}... ", end='')
             mig.run(
-                package=package,
-                cursor=cur,
-                user=user
+                package_path=package.pack_path,
+                cursor=package.cursor,
+                user=user,
+                db_engine=package.manifest["db_engine"]
             )
             print("SUCCESS")
-        print(f"Successfully ran {len(mani_migrations)} migrations")
-        # cnxn.commit()
-        cnxn.close()
+        print(f"Successfully migrated {len(mani_migrations)} migrations")
+        package.connection.commit()
+        package.connection.close()
     else:
-        print("No migrations to run, wigeon is flying home...")
+        print("No migrations to migrate, wigeon is flying home...")
     print()
 if __name__ == "__main__":
     app()

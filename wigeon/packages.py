@@ -5,6 +5,7 @@ import json
 from typing import List
 
 # external imports
+import pymssql
 
 # project imports
 from wigeon.db import Connector, Migration
@@ -23,6 +24,7 @@ class Package(object):
         self.manifest = self.read_manifest()
         self.connector = None
         self.connection = None
+        self.cursor = None
 
     def exists(
         self,
@@ -80,7 +82,7 @@ class Package(object):
         """
         shutil.rmtree(self.pack_path, ignore_errors=True)
     
-    def list_migrations(
+    def list_local_migrations(
         self
     ) -> list:
         """
@@ -93,7 +95,7 @@ class Package(object):
         migration_list: List[pl.Path]
     ) -> str:
         """
-        Parses migration files and finds version number to return the latest as a string.
+        Parses local migration files and finds version number to return the latest as a string.
         
         Assumes migration filename convention of:
         ####-<migration_name>.sql
@@ -135,21 +137,23 @@ class Package(object):
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:
             json.dump(self.manifest, f, indent=4)
     
-    def fetch_manifest_migrations(self, buildtag: str=None):
+    def list_manifest_migrations(self, buildtag: str=None):
         """
-        fetch_manifest_migrations collects migrations present in the manifest and
+        list_manifest_migrations collects migrations present in the manifest and
         allows for filtering based on buildtag
         """
         if not self.manifest:
             raise ValueError(
-                f"{self.__class__} {self.packagename}'s manifest not yet read or built. Wigeon will not write nonetype manifest."
+                f"{self.__class__} {self.packagename}'s manifest not yet read, built, or no migrations have been added."
             )
         if buildtag: # pragma: no cover
             # TODO implement filtering by build tag
             raise NotImplementedError("Build tag filtering not yet implemented!")
             migrations = {k:v for k,v in self.manifest["migrations"] if buildtag in v["builds"]}
         else:
-            migrations = self.manifest["migrations"].copy()
+            migrations = [Migration(**m) for m in self.manifest["migrations"]]
+            #migrations = self.manifest["migrations"].copy()
+        
         return migrations
     
     def add_migration(
@@ -175,6 +179,39 @@ class Package(object):
             environment=self.manifest["environments"][environment]
         )
     
+    def list_db_migrations(self) -> list:
+        # find migrations already in target database
+        query_migrations_from_changelog = "SELECT migration_name from changelog;"
+
+        self.cursor.execute(query_migrations_from_changelog)
+        try:
+            db_migrations = [n[0] for n in self.cursor.fetchall()]
+        except IndexError as e:
+            print("No index 0 in db migrations, changelog table must not be set up in target database")
+            exit()
+        return db_migrations
+    
+    def compare_migrations(
+        self,
+        manifest_migrations: List[Migration],
+        db_migrations: List[str]
+        ):
+        """
+        compare_migrations compares migrations in the manifest to migrations already in the database
+        and returns a list of duplicate migrations
+        """
+        # find migrations alead in the database
+        duplicate_migrations = [m.name for m in manifest_migrations if m.name in db_migrations]
+        return duplicate_migrations
+
+    def init_changelog(self):
+        # initialize changelog table if not exists and add columns
+        # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
+        try:
+            self.cursor.execute(self.connector.changeloginit)
+        except pymssql._pymssql.OperationalError:
+            print("changelog exists")
+    
     def connect(
         self,
         server: str=None, # connection variable
@@ -194,5 +231,6 @@ class Package(object):
             driver=driver,
             connectionstring=connectionstring
         )
+        self.cursor = self.connection.cursor()
 
-        return self.connection
+        return self.cursor

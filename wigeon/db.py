@@ -3,7 +3,7 @@ import pathlib as pl
 import os
 import sqlite3
 import datetime
-from typing import TypedDict, Union, List
+from typing import Union, List
 
 # external imports
 # import pyodbc
@@ -48,7 +48,7 @@ class Connector(object):
        # read environment name from Connector and collect envvariable names
        # extract environment variables to kwargs if variables exist
         if self.environment:
-            print(f"Connecting to {self.environment} environment...", end=" ")
+            print(f"Connecting to {self.db_engine} via environment variables...", end=" ")
             kwargs = self.environment
             # dictionary comprehension ftwftwftw
             kwargs = {k:os.environ[v] for k,v in kwargs.items() if v}
@@ -116,16 +116,17 @@ class Migration(object):
     def run(
         self,
         package_path: pl.Path,
-        cursor: Union[sqlite3.Cursor, str], # TODO replace str with pyodbc.cursor once implemented
-        user: str
+        cursor: Union[sqlite3.Cursor, pymssql.Connection],
+        user: str,
+        db_engine: str
     ):
-        with open(package_path.pack_path.joinpath(self.name), "r") as f:
+        with open(package_path.joinpath(self.name), "r") as f:
             query = f.read()
         cursor.execute(query)
 
         migration_date = datetime.datetime.now().strftime("%Y%m%d-%H%M"),
 
-        if self.manifest["db_engine"] == "sqlite":
+        if db_engine == "sqlite":
             cursor.execute(
                 "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
                 {
@@ -134,7 +135,7 @@ class Migration(object):
                     "applied_by": user
                 }
             )
-        if self.manifest["db_engine"] == "mssql":
+        if db_engine == "mssql":
             cursor.execute(
                 "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES (%s, %s, %s)",
                 (migration_date, self.name, user)

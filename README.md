@@ -10,12 +10,12 @@ Like its namesake, wigeon is compact, portable, and easily able to fit itself in
 repos/actions/pipelines/etc. to complement the continuous patterns you worked so hard
 to put into place.
 
-No ORM or language specific migration syntax means anyone who can `SELECT *` can automate
-and continuously integrate/deliver data goodness to their apps/teams.
+Does not use an ORM or require language specific migration syntax meaning anyone
+who can `SELECT *` can automate and continuously integrate/deliver data goodness
+to their apps/teams.
 
 ## Features included
 - Database package creation
-- Auto-iterated migration naming
 - Migration manifest management
 - Migration build tagging
 - Connection manager
@@ -25,10 +25,15 @@ and continuously integrate/deliver data goodness to their apps/teams.
 
 ## Databases supported (at the moment)
 - sqlite
-## Databases to support (very soon)
 - mssqlserver
+## Databases to support (soon)
 - postgres
 - mysql
+
+## Setup
+```shell
+pip install wigeon
+```
 
 ## To use:
 NOTE: prefix every command with `python` if you are running directly from a clone of the repo.
