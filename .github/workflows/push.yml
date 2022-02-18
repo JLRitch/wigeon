@@ -22,7 +22,7 @@ jobs:
           pip install setuptools wheel twine build --user
       - name: Build dist
         run: |
-          python -m build --sdist --wheel --outdir distr/
+          python -m build --sdist --wheel --outdir dist/
       - name: Publish to pypi
         run: |
           python3 -m twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
