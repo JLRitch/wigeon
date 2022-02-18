@@ -1,0 +1,30 @@
+name: Push to pypi
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code to CI runner
+        uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install packaging tools
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install setuptools wheel twine build --user
+      - name: Build dist
+        run: |
+          python -m build --sdist --wheel --outdir distr/
+      - name: Publish to pypi
+        run: |
+          python3 -m twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPIACCESS }}

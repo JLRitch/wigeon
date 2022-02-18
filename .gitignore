@@ -12,6 +12,7 @@ dist/
 *.egg-info
 
 # package env
+packages/
 packages/*/
 packages/**/
 packages/**/__init__.py

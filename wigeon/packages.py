@@ -5,8 +5,11 @@ import json
 from typing import List
 
 # external imports
+import pymssql
 
 # project imports
+from wigeon.db import Connector, Migration
+from wigeon.manifests import Environment, Manifest
 
 
 class Package(object):
@@ -18,7 +21,10 @@ class Package(object):
     ):
         self.packagename = packagename
         self.pack_path = Package.pack_folder.joinpath(packagename)
-        self.manifest = None
+        self.manifest = self.read_manifest()
+        self.connector = None
+        self.connection = None
+        self.cursor = None
 
     def exists(
         self,
@@ -63,7 +69,7 @@ class Package(object):
                 "server": None,
                 "database": None,
                 "username": None,
-                "password:": None
+                "password": None
             }
         manifest_template["migrations"] = []
 
@@ -76,7 +82,7 @@ class Package(object):
         """
         shutil.rmtree(self.pack_path, ignore_errors=True)
     
-    def list_migrations(
+    def list_local_migrations(
         self
     ) -> list:
         """
@@ -89,7 +95,7 @@ class Package(object):
         migration_list: List[pl.Path]
     ) -> str:
         """
-        Parses migration files and finds version number to return the latest as a string.
+        Parses local migration files and finds version number to return the latest as a string.
         
         Assumes migration filename convention of:
         ####-<migration_name>.sql
@@ -117,8 +123,11 @@ class Package(object):
         return str(current_migration).zfill(4)
 
     def read_manifest(self):
-        with open(self.pack_path.joinpath("manifest.json"), "r") as f:
-            self.manifest = json.load(f)
+        try:
+            with open(self.pack_path.joinpath("manifest.json"), "r") as f:
+                self.manifest = json.load(f)
+        except FileNotFoundError:
+            print(f"Cannot access: {self.pack_path.joinpath('manifest.json')}, package might not exist yet.")
 
     def write_manifest(self):
         if not self.manifest:
@@ -128,21 +137,23 @@ class Package(object):
         with open(self.pack_path.joinpath("manifest.json"), "w") as f:
             json.dump(self.manifest, f, indent=4)
     
-    def fetch_manifest_migrations(self, buildtag: str=None):
+    def list_manifest_migrations(self, buildtag: str=None):
         """
-        fetch_manifest_migrations collects migrations present in the manifest and
+        list_manifest_migrations collects migrations present in the manifest and
         allows for filtering based on buildtag
         """
         if not self.manifest:
             raise ValueError(
-                f"{self.__class__} {self.packagename}'s manifest not yet read or built. Wigeon will not write nonetype manifest."
+                f"{self.__class__} {self.packagename}'s manifest not yet read, built, or no migrations have been added."
             )
         if buildtag: # pragma: no cover
             # TODO implement filtering by build tag
             raise NotImplementedError("Build tag filtering not yet implemented!")
             migrations = {k:v for k,v in self.manifest["migrations"] if buildtag in v["builds"]}
         else:
-            migrations = self.manifest["migrations"].copy()
+            migrations = [Migration(**m) for m in self.manifest["migrations"]]
+            #migrations = self.manifest["migrations"].copy()
+        
         return migrations
     
     def add_migration(
@@ -161,8 +172,65 @@ class Package(object):
             }
         )
         self.write_manifest()
+    
+    def create_connector(self, environment: str=None):
+        self.connector = Connector(
+            manifest=self.manifest,
+            environment=self.manifest["environments"][environment]
+        )
+    
+    def list_db_migrations(self) -> list:
+        # find migrations already in target database
+        query_migrations_from_changelog = "SELECT migration_name from changelog;"
 
-class manifest(object):
+        self.cursor.execute(query_migrations_from_changelog)
+        try:
+            db_migrations = [n[0] for n in self.cursor.fetchall()]
+        except IndexError as e:
+            print("No index 0 in db migrations, changelog table must not be set up in target database")
+            exit()
+        return db_migrations
+    
+    def compare_migrations(
+        self,
+        manifest_migrations: List[Migration],
+        db_migrations: List[str]
+        ):
+        """
+        compare_migrations compares migrations in the manifest to migrations already in the database
+        and returns a list of duplicate migrations
+        """
+        # find migrations alead in the database
+        duplicate_migrations = [m.name for m in manifest_migrations if m.name in db_migrations]
+        return duplicate_migrations
 
-    def __init__(self):
-        pass
+    def init_changelog(self):
+        # initialize changelog table if not exists and add columns
+        # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
+        try:
+            self.cursor.execute(self.connector.changeloginit)
+        except pymssql._pymssql.OperationalError:
+            print("changelog exists")
+    
+    def connect(
+        self,
+        server: str=None, # connection variable
+        database: str=None, # connection variable
+        username: str=None, # connection variable
+        password: str=None, # connection variable
+        driver: str=None, # connection variable
+        connectionstring: str=None, # connection variable,
+        environment: Environment=None
+    ):
+        self.create_connector(environment=environment)
+        self.connection = self.connector.connect(
+            server=server,
+            database=database,
+            username=username,
+            password=password,
+            driver=driver,
+            connectionstring=connectionstring
+        )
+        self.cursor = self.connection.cursor()
+
+        return self.cursor

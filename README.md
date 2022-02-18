@@ -1,4 +1,6 @@
 # wigeon
+[![Build and test](https://github.com/JLRitch/wigeon/actions/workflows/build-test.yml/badge.svg)](https://github.com/JLRitch/wigeon/actions/workflows/build-test.yml)
+
 DB Migrations for the continuous developer.
 
 ## Why wigeon?
@@ -8,12 +10,12 @@ Like its namesake, wigeon is compact, portable, and easily able to fit itself in
 repos/actions/pipelines/etc. to complement the continuous patterns you worked so hard
 to put into place.
 
-No ORM or language specific migration syntax means anyone who can `SELECT *` can automate
-and continuously integrate/deliver data goodness to their apps/teams.
+Does not use an ORM or require language specific migration syntax meaning anyone
+who can `SELECT *` can automate and continuously integrate/deliver data goodness
+to their apps/teams.
 
 ## Features included
 - Database package creation
-- Auto-iterated migration naming
 - Migration manifest management
 - Migration build tagging
 - Connection manager
@@ -23,10 +25,28 @@ and continuously integrate/deliver data goodness to their apps/teams.
 
 ## Databases supported (at the moment)
 - sqlite
-## Databases to support (very soon)
 - mssqlserver
+## Databases to support (soon)
 - postgres
 - mysql
+
+## Setup
+### Direct Install
+```shell
+pip install wigeon
+```
+
+### Via Docker-Compose
+```shell
+docker-compose up
+```
+Attach a shell to the wigeon_cli container. You can create packages/migrations and run them against
+db services in the docker-compose network. Package files will write to your local compute using
+volume mounts.
+
+You can edit environment variable names in your local manifest.json which will propigate to the cli service,
+where the values for those variables are read. To change your target database, you will need to edit env
+variables in the docker-compose file.
 
 ## To use:
 NOTE: prefix every command with `python` if you are running directly from a clone of the repo.
@@ -57,6 +77,16 @@ export DEV_CONNECTION_STRING=/home/usr/wigeon/fly-dev.sqlite
 export QA_CONNECTION_STRING=/home/usr/wigeon/fly-qa.sqlite
 export PROD_CONNECTION_STRING=/home/usr/wigeon/fly-prod.sqlite
 ```
+
+(OPTIONAL) If running mssql in docker you might Set up environment variables and
+add to package manifest.json:
+```bash
+export LOCAL_MSSQL_SERVER=0.0.0.0:1433
+export LOCAL_MSSQL_DBNAME=tempdb
+export LOCAL_MSSQL_USERNAME=sa
+export LOCAL_MSSQL_PASSWORD=SApass123
+```
+
 
 (OPTIONAL) Add environment variable names to manifest.json:
 ```json
@@ -132,40 +162,10 @@ sudo apt-get install -y unixodbc-dev
 ```
 
 ### For mssql-server ODBC on Ubuntu
-Found at:
+Docs for installing sqlserver odbc drivers (not yet supported):
 https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15
-
-```bash
-sudo su
-curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-
-#Download appropriate package for the OS version
-#Choose only ONE of the following, corresponding to your OS version
-
-#Ubuntu 16.04
-curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-#Ubuntu 18.04
-curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-#Ubuntu 20.04
-curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-#Ubuntu 21.04
-curl https://packages.microsoft.com/config/ubuntu/21.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-exit
-sudo apt-get update
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
-# optional: for bcp and sqlcmd
-sudo ACCEPT_EULA=Y apt-get install -y mssql-tools
-echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
-source ~/.bashrc
-# optional: for unixODBC development headers
-sudo apt-get install -y unixodbc-dev
-```
 
 ## running tests
 ```bash
- python -m pytest --cov-report term-missing --cov-report html --cov=wigeon test/
+ python -m pytest --cov-report term-missing --cov=wigeon test/
  ```

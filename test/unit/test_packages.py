@@ -43,14 +43,14 @@ class TestPackage(unittest.TestCase):
                     "server": None,
                     "database": None,
                     "username": None,
-                    "password:": None
+                    "password": None
                 },
                 "qa": {
                     "connectionstring": None,
                     "server": None,
                     "database": None,
                     "username": None,
-                    "password:": None
+                    "password": None
                 }
             },
             "migrations": []
@@ -150,11 +150,11 @@ class TestPackage(unittest.TestCase):
         
         # assertions
         self.assertEqual(
-            no_migrations.list_migrations(),
+            no_migrations.list_local_migrations(),
             []
         )
         self.assertEqual(
-            with_migrations.list_migrations(),
+            with_migrations.list_local_migrations(),
             [mig_path]
         )
 
