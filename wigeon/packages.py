@@ -127,7 +127,7 @@ class Package(object):
             with open(self.pack_path.joinpath("manifest.json"), "r") as f:
                 self.manifest = json.load(f)
         except FileNotFoundError:
-            print(f"Cannot access: {self.pack_path.joinpath('manifest.json')}, package might not exist yet.")
+            print(f"Cannot read: {self.pack_path.joinpath('manifest.json')}, package might not exist or is being initialized.")
 
     def write_manifest(self):
         if not self.manifest:

@@ -55,7 +55,6 @@ class Connector(object):
 
          # run connection method based on db_engine for package
         db_engines[self.db_engine](**kwargs)
-        print("SUCCESS")
         return self.cnxn
         
 
@@ -124,14 +123,14 @@ class Migration(object):
             query = f.read()
         cursor.execute(query)
 
-        migration_date = datetime.datetime.now().strftime("%Y%m%d-%H%M"),
-
+        migration_date = datetime.datetime.now().strftime("%Y%m%d-%H%M")
+        
         if db_engine == "sqlite":
             cursor.execute(
                 "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
                 {
                     "migration_date": migration_date,
-                    "migration_name":self.name,
+                    "migration_name": self.name,
                     "applied_by": user
                 }
             )

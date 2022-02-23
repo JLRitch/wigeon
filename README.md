@@ -56,9 +56,9 @@ Access help:
 wigeon --help
 ```
 
-Create `fly` package for `sqlite` with local, dev, qa, and prod environments:
+Create package with name `fly` for `sqlite` dbtype with local, dev, qa, and prod environments:
 ```bash
-wigeon createpackage fly sqlite --environments=local,dev,qa,prod
+wigeon create package -n fly -d sqlite -e local,dev,qa,prod
 ```
 
 Create databases to connect to for each environment:
@@ -81,7 +81,7 @@ export PROD_CONNECTION_STRING=/home/usr/wigeon/fly-prod.sqlite
 (OPTIONAL) If running mssql in docker you might Set up environment variables and
 add to package manifest.json:
 ```bash
-export LOCAL_MSSQL_SERVER=0.0.0.0:1433
+export LOCAL_MSSQL_SERVER=0.0.0.0:1433 # or 127.0.0.1
 export LOCAL_MSSQL_DBNAME=tempdb
 export LOCAL_MSSQL_USERNAME=sa
 export LOCAL_MSSQL_PASSWORD=SApass123
@@ -133,19 +133,24 @@ wigeon createmigration add_cars_table fly 0.0.1
 
 List all migrations for the `fly` package:
 ```bash
-wigeon listmigrations fly
+wigeon package -n fly -l
+```
+
+Run connection test to the `fly` package's local environment:
+```bash
+wigeon package -n fly -ct -e local
 ```
 
 Run migrations for the `fly` package (a local sqlite connection):
 ```bash
-wigeon runmigrations fly --connstring=/path/to/exampledb.sqlite
+wigeon runmigrations -n fly --conn_string=/path/to/exampledb.sqlite
 ```
 
 OR
 
 IF package's manifest.json is configured appropriately for a "local" environment
 ```bash
-wigeon runmigrations fly --environment=local
+wigeon package -n fly --migrate -e local
 ```
 
 
