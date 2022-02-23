@@ -23,8 +23,8 @@ jobs:
       - name: Build dist
         run: |
           python -m build --sdist --wheel --outdir dist/
-      - name: Publish to pypi
-        run: |
-          python3 -m twine upload -u __token__ -p "$PYPI_TOKEN" dist/*
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPIACCESS }}
+      - name: Publish distribution to PyPI
+        if: startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.PYPIACCESS }}
