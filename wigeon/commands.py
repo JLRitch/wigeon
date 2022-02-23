@@ -180,14 +180,87 @@ def create_migration(
 
 
 ###############
-### package commands
+### show commands
 ###############
-@app.command("package")
+@app.command("show")
+@click.option(
+    "-n",
+    "--name",
+    default=None,
+    type=str,
+    help="The name of the package you want to check"
+)
+@click.option(
+    "-p",
+    "--packages",
+    is_flag=True,
+    type=bool,
+    default=False,
+    expose_value=True,
+    is_eager=True,
+    help="Shows the package in your workspace"
+)
+@click.option(
+    "-m",
+    "--migrations",
+    is_flag=True,
+    type=bool,
+    default=False,
+    expose_value=True,
+    is_eager=True,
+    help="Shows the migrations in your manifest/workspace"
+)
+@click.option(
+    "-b",
+    "--builds",
+    is_flag=True,
+    type=bool,
+    default=False,
+    expose_value=True,
+    is_eager=True,
+    help="Shows the builds in your manifest"
+)
+def show(
+    name: str,
+    packages: bool,
+    migrations: bool,
+    builds: bool
+):
+
+    if packages:
+        raise NotImplementedError("Show packages not yet implemented")
+    
+    if builds:
+        raise NotImplementedError("Show builds not yet implemented")
+    
+    if migrations and not name:
+        raise ValueError("You must provide a package name to show it's migrations (-n or --name)")
+
+    # list migration flag option
+    if migrations:
+        # check if package exists and read data
+        package = Package(packagename=name)
+        package.exists()
+        package.read_manifest()
+
+        click.echo(f"Found following migrations for {name}:")
+        current_migrations = package.list_local_migrations()
+        for m in sorted(current_migrations):
+            click.echo(f"    {m.name}")
+        current_migr = package.find_current_migration(migration_list=current_migrations)
+        click.echo(click.style(f"Current migration would be: {current_migr}", fg="yellow"))
+        return
+
+
+###############
+### migrate commands
+###############
+@app.command("migrate")
 @click.option(
     "-n",
     "--name",
     type=str,
-    help="The name of the package you want to use"
+    help="The name of the package you want to migrate"
 )
 @click.option(
     "-s",
@@ -256,26 +329,6 @@ def create_migration(
     help="Force use of env variable as named in manifest environments",
 )
 @click.option(
-    "-l",
-    "--list_migrations",
-    is_flag=True,
-    type=bool,
-    default=False,
-    expose_value=True,
-    is_eager=True,
-    help="Display the migrations for a package and exit",
-)
-@click.option(
-    "-m",
-    "--migrate",
-    is_flag=True,
-    type=bool,
-    default=False,
-    expose_value=True,
-    is_eager=True,
-    help="Run migrations to target db",
-)
-@click.option(
     "-a",
     "--run_all",
     is_flag=True,
@@ -285,9 +338,8 @@ def create_migration(
     is_eager=True,
     help="Run all migrations to target db",
 )
-def package(
+def migrate(
     name:str,
-    list_migrations: bool,
     server: str,
     database: str,
     username: str,
@@ -296,7 +348,6 @@ def package(
     conn_string: str,
     environment: str,
     connect_test: bool,
-    migrate: bool,
     run_all: bool,
     buildtag: str
 ):
@@ -304,16 +355,6 @@ def package(
     package = Package(packagename=name)
     package.exists()
     package.read_manifest()
-
-    # list migration flag option
-    if list_migrations:
-        click.echo(f"Found following migrations for {name}:")
-        current_migrations = package.list_local_migrations()
-        for m in sorted(current_migrations):
-            click.echo(f"    {m.name}")
-        current_migr = package.find_current_migration(migration_list=current_migrations)
-        click.echo(click.style(f"Current migration would be: {current_migr}", fg="yellow"))
-        return
 
     # create connection, return cursor
     cnxn = package.connect(
@@ -332,52 +373,51 @@ def package(
         cnxn.close()
         return
     
-    # migrate flag option
-    if migrate:
-        # initialize changelog table if not exists and add columns
-        # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
-        package.init_changelog()
+    # MAIN migration
 
-        # find migrations already in target database
-        db_migrations = package.list_db_migrations()
+    # initialize changelog table if not exists and add columns
+    # change_id, migration_date, applied_by(username), and migration_name(.sql filename)
+    package.init_changelog()
 
-        # find migrations in manifest
-        # filter to migrations only with certain build tag
-        mani_migrations = package.list_manifest_migrations(buildtag=buildtag)
-        click.echo(f"Migrations in manifest: {mani_migrations}")
+    # find migrations already in target database
+    db_migrations = package.list_db_migrations()
+
+    # find migrations in manifest
+    # filter to migrations only with certain build tag
+    mani_migrations = package.list_manifest_migrations(buildtag=buildtag)
+    click.echo(f"Migrations in manifest: {mani_migrations}")
 
 
-        # find migrations alead in the database
-        # duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
-        duplicate_migrations = package.compare_migrations(
-            manifest_migrations=mani_migrations,
-            db_migrations=db_migrations
-        )
-        click.echo(f"Migrations already in db: {duplicate_migrations}")
-        # remove duplicate migrations from manifest, unless all option is given
-        if not run_all:
-            mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
+    # find migrations alead in the database
+    # duplicate_migrations = [m.name for m in mani_migrations if m.name in db_migrations]
+    duplicate_migrations = package.compare_migrations(
+        manifest_migrations=mani_migrations,
+        db_migrations=db_migrations
+    )
+    click.echo(f"Migrations already in db: {duplicate_migrations}")
+    # remove duplicate migrations from manifest, unless all option is given
+    if not run_all:
+        mani_migrations = [m for m in mani_migrations if m.name not in db_migrations]
 
-        click.echo(f"Migrations to run: {mani_migrations}")
-        if len(mani_migrations) > 0:
-            for mig in mani_migrations:
-                if mig.name in db_migrations:
-                    duplicate_migrations.append(mig.name)
-                    continue
-                click.echo(f"Running migration {mig}... ")
-                mig.run(
-                    package_path=package.pack_path,
-                    cursor=package.cursor,
-                    user=user,
-                    db_engine=package.manifest["db_engine"]
-                )
-            click.echo(click.style(f"Successfully migrated {len(mani_migrations)} migrations", fg="green"))
-            package.connection.commit()
-            package.connection.close()
-        else:
-            click.echo("No migrations to migrate, wigeon is flying home...")
-        print()
-
+    click.echo(f"Migrations to run: {mani_migrations}")
+    if len(mani_migrations) > 0:
+        for mig in mani_migrations:
+            if mig.name in db_migrations:
+                duplicate_migrations.append(mig.name)
+                continue
+            click.echo(f"Running migration {mig}... ")
+            mig.run(
+                package_path=package.pack_path,
+                cursor=package.cursor,
+                user=user,
+                db_engine=package.manifest["db_engine"]
+            )
+        click.echo(click.style(f"Successfully migrated {len(mani_migrations)} migrations", fg="green"))
+        package.connection.commit()
+        package.connection.close()
+    else:
+        click.echo("No migrations to migrate, wigeon is flying home...")
+    print()
 
 if __name__ == "__main__":
     app()

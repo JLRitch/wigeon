@@ -58,7 +58,7 @@ wigeon --help
 
 Create package with name `fly` for `sqlite` dbtype with local, dev, qa, and prod environments:
 ```bash
-wigeon create package -n fly -d sqlite -e local,dev,qa,prod
+wigeon create package --name flytwo --dbtype sqlite --environments local,dev,qa,prod
 ```
 
 Create databases to connect to for each environment:
@@ -124,33 +124,33 @@ export LOCAL_MSSQL_PASSWORD=SApass123
 
 Add migrations to the `fly` package with build tag of `0.0.1`:
 ```bash
-wigeon createmigration initialize_db fly 0.0.1
-wigeon createmigration add_people_table fly 0.0.1
-wigeon createmigration add_cars_table fly 0.0.1
+wigeon create migration --name initialize_db --package fly --build 0.0.1
+wigeon create migration --name add_habitat_table --package fly --build 0.0.1
+wigeon create migration --name add_paths_table --package fly --build 0.0.1
 ```
 
 **SCRIPT SOME SQL IN THOSE MIGRATION FILES!!!**
 
 List all migrations for the `fly` package:
 ```bash
-wigeon package -n fly -l
+wigeon show --name fly --migrations
 ```
 
 Run connection test to the `fly` package's local environment:
 ```bash
-wigeon package -n fly -ct -e local
+wigeon migrate --name fly --connect_test --environment local
 ```
 
 Run migrations for the `fly` package (a local sqlite connection):
 ```bash
-wigeon runmigrations -n fly --conn_string=/path/to/exampledb.sqlite
+wigeon migrate --name fly --conn_string=/path/to/exampledb.sqlite
 ```
 
 OR
 
 IF package's manifest.json is configured appropriately for a "local" environment
 ```bash
-wigeon package -n fly --migrate -e local
+wigeon migrate --name fly --environment local
 ```
 
 
