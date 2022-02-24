@@ -61,6 +61,8 @@ Create package with name `fly` for `sqlite` dbtype with local, dev, qa, and prod
 wigeon create package --name flytwo --dbtype sqlite --environments local,dev,qa,prod
 ```
 
+
+
 Create databases to connect to for each environment:
 ```bash
 sqlite3
@@ -78,6 +80,14 @@ export QA_CONNECTION_STRING=/home/usr/wigeon/fly-qa.sqlite
 export PROD_CONNECTION_STRING=/home/usr/wigeon/fly-prod.sqlite
 ```
 
+(OPTIONAL) Config add env variable names for connectionstring of each environment in the `fly` package:
+```bash
+wigeon config --name fly --environment local --conn_string LOCAL_CONNECTION_STRING
+wigeon config --name fly --environment dev --conn_string DEV_CONNECTION_STRING
+wigeon config --name fly --environment qa --conn_string QA_CONNECTION_STRING
+wigeon config --name fly --environment prod --conn_string PROD_CONNECTION_STRING
+```
+
 (OPTIONAL) If running mssql in docker you might Set up environment variables and
 add to package manifest.json:
 ```bash
@@ -87,8 +97,12 @@ export LOCAL_MSSQL_USERNAME=sa
 export LOCAL_MSSQL_PASSWORD=SApass123
 ```
 
+(OPTIONAL) Config add env variable names for connectionstring of each environment in the `fly` package:
+```bash
+wigeon config --name fly --environment local --server LOCAL_MSSQL_SERVER --database LOCAL_MSSQL_DBNAME --username LOCAL_MSSQL_USERNAME --password LOCAL_MSSQL_PASSWORD
+```
 
-(OPTIONAL) Add environment variable names to manifest.json:
+(OPTIONAL) Add environment variable names directly to manifest.json:
 ```json
   "environments": {
       "local": {
@@ -153,8 +167,7 @@ IF package's manifest.json is configured appropriately for a "local" environment
 wigeon migrate --name fly --environment local
 ```
 
-
-## Requirements
+## Requirements (ODBC future support)
 
 ### For gcc compiler on Ubuntu
 ```bash
