@@ -126,7 +126,7 @@ class Migration(object):
             cursor.execute(query)
         except Exception as e:
             if db_engine == "sqlite":
-                cursor.execute("rollback")
+                cursor.execute("ROLLBACK")
                 raise e
             if db_engine == "mssql":
                 raise e

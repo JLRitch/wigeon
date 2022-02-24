@@ -251,6 +251,104 @@ def show(
         click.echo(click.style(f"Current migration would be: {current_migr}", fg="yellow"))
         return
 
+###############
+### config commands
+###############
+@app.command("config")
+@click.option(
+    "-n",
+    "--name",
+    type=str,
+    help="The name of the package you want to config"
+)
+@click.option(
+    "-s",
+    "--server",
+    type=str,
+    default=None,
+    help="The server address for your db (host:port)"
+)
+@click.option(
+    "-d",
+    "--database",
+    type=str,
+    default=None,
+    help="The name of the database"
+)
+@click.option(
+    "-dt",
+    "--dbtype",
+    type=str,
+    default=None,
+    help="The db type this package will connect to (either sqlite or mssql currently)"
+)
+@click.option(
+    "-u",
+    "--username",
+    type=str,
+    default=None,
+    help="The db server username"
+)
+@click.option(
+    "-p",
+    "--password",
+    type=str,
+    default=None,
+    help="The db server password"
+)
+@click.option(
+    "-c",
+    "--conn_string",
+    type=str,
+    default=None,
+    help="The full connection string"
+)
+@click.option(
+    "-e",
+    "--environment",
+    type=str,
+    default=None,
+    help="The name of the environment config that you are updating"
+)
+@click.option(
+    "-f",
+    "--force_nulls",
+    is_flag=True,
+    type=bool,
+    default=False,
+    expose_value=True,
+    is_eager=True,
+    help="If param not provided, will overwrite config field with null"
+)
+def config(
+    name:str,
+    server: str,
+    database: str,
+    dbtype: str,
+    username: str,
+    password: str,
+    conn_string: str,
+    environment: str,
+    force_nulls: bool
+):
+    """
+    Updates configuration of an manifest for a given environment
+    """
+    # check if package exists and read data
+    package = Package(packagename=name)
+    package.exists()
+    package.read_manifest()
+    package.update_config(
+        db_engine=dbtype,
+        environment=environment,
+        connectionstring=conn_string,
+        server=server,
+        database=database,
+        username=username,
+        password=password,
+        force_nulls=force_nulls
+    )
+    package.write_manifest()
 
 ###############
 ### migrate commands

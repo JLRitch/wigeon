@@ -234,3 +234,37 @@ class Package(object):
         self.cursor = self.connection.cursor()
 
         return self.cursor
+    
+    def update_config(
+        self,
+        db_engine: str=None,
+        environment: str=None,
+        connectionstring: str=None,
+        server: str=None,
+        database: str=None,
+        username: str=None,
+        password: str=None,
+        force_nulls: bool=False
+    ):
+        if force_nulls:
+            self.manifest["db_engine"] = db_engine
+            self.manifest["environments"][environment]["connectionstring"] = connectionstring
+            self.manifest["environments"][environment]["server"] = server
+            self.manifest["environments"][environment]["database"] = database
+            self.manifest["environments"][environment]["username"] = username
+            self.manifest["environments"][environment]["password"] = password
+        else:
+            if db_engine:
+                self.manifest["db_engine"] = db_engine
+            if connectionstring:
+                self.manifest["environments"][environment]["connectionstring"] = connectionstring
+            if server:
+                self.manifest["environments"][environment]["server"] = server
+            if database:
+                self.manifest["environments"][environment]["database"] = database
+            if username:
+                self.manifest["environments"][environment]["username"] = username
+            if password:
+                self.manifest["environments"][environment]["password"] = password
+        
+        self.write_manifest()
