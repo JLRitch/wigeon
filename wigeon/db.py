@@ -115,16 +115,25 @@ class Migration(object):
     def run(
         self,
         package_path: pl.Path,
-        cursor: Union[sqlite3.Cursor, pymssql.Connection],
+        cursor: Union[sqlite3.Cursor, pymssql.Cursor],
         user: str,
         db_engine: str
     ):
         with open(package_path.joinpath(self.name), "r") as f:
             query = f.read()
-        cursor.execute(query)
+        
+        try:
+            cursor.execute(query)
+        except Exception as e:
+            if db_engine == "sqlite":
+                cursor.execute("ROLLBACK")
+                raise e
+            if db_engine == "mssql":
+                raise e
+                
 
         migration_date = datetime.datetime.now().strftime("%Y%m%d-%H%M")
-        
+
         if db_engine == "sqlite":
             cursor.execute(
                 "INSERT INTO changelog (migration_date, migration_name, applied_by) VALUES(:migration_date, :migration_name, :applied_by)",
